@@ -293,3 +293,25 @@ def sanitize_tree(src: Path, dst: Path) -> list[str]:
 
 def jdump(obj: Any) -> str:
     return json.dumps(obj, indent=2, sort_keys=False, default=str)
+
+
+# ---------------------------------------------------------------- preflight
+
+def gpu_containers_to_stop(inspected: list[dict], keep: list[str]) -> list[dict]:
+    """Pick running containers that hold the GPU, from `docker inspect` objects.
+
+    A container qualifies when it requests GPU devices (DeviceRequests / nvidia
+    runtime / NVIDIA_VISIBLE_DEVICES) and its name is not in `keep`.
+    """
+    out = []
+    for c in inspected:
+        name = (c.get("Name") or "").lstrip("/")
+        if not name or name in keep or not (c.get("State") or {}).get("Running"):
+            continue
+        hc = c.get("HostConfig") or {}
+        env = (c.get("Config") or {}).get("Env") or []
+        gpu = bool(hc.get("DeviceRequests")) or hc.get("Runtime") == "nvidia" or any(
+            e.startswith("NVIDIA_VISIBLE_DEVICES=") and e.split("=", 1)[1] not in ("", "void", "none") for e in env)
+        if gpu:
+            out.append({"name": name, "id": (c.get("Id") or "")[:12], "image": (c.get("Config") or {}).get("Image")})
+    return out

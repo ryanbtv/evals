@@ -327,6 +327,47 @@ class Harness:
                     pass
             (REPO / "leaderboard.md").write_text(lib.leaderboard(sums))
 
+    def preflight(self) -> None:
+        """Stop other sparkrun workloads and GPU containers; record what was stopped."""
+        self.current_phase = "preflight"
+        pf = self.cfg.get("preflight") or {}
+        rec = {"sparkrun_workloads": [], "systemd_units": [], "containers": [], "errors": []}
+        self.platform["preflight"] = rec
+        if self.dry_run:
+            return
+        for unit in pf.get("systemd_units") or []:
+            if sh(["systemctl", "is-active", unit], 15) == "active":
+                out = sh(["sudo", "-n", "systemctl", "stop", unit], 300)
+                rec["systemd_units"].append({"unit": unit, "result": out or "stopped", "active_after": sh(["systemctl", "is-active", unit], 15)})
+                self.log(f"stopped systemd unit {unit}: {out or 'ok'}")
+        try:
+            from sparkrun.api import status, stop
+            st = status(cluster=self.cfg["target"]["cluster"], sctx=self.sctx)
+            ids = {w.cluster_id: (w.recipe_name, h.host) for h in st.hosts for w in h.workloads}
+            for wid, (recipe_name, host) in ids.items():
+                self.log(f"stopping sparkrun workload {wid} ({recipe_name}) on {host}")
+                try:
+                    r = stop(workload_id=wid, sctx=self.sctx)
+                    rec["sparkrun_workloads"].append({"workload_id": wid, "recipe": recipe_name, "host": host, "containers_removed": r.containers_removed, "errors": list(r.errors)})
+                except Exception as e:  # noqa: BLE001
+                    rec["errors"].append(f"stop {wid}: {e}")
+        except Exception as e:  # noqa: BLE001
+            rec["errors"].append(f"sparkrun status: {type(e).__name__}: {e}")
+        ids = sh(["docker", "ps", "-q"], 30).split()
+        if ids:
+            try:
+                inspected = json.loads(sh(["docker", "inspect", *ids], 60))
+            except ValueError as e:
+                inspected, _ = [], rec["errors"].append(f"docker inspect: {e}")
+            for c in lib.gpu_containers_to_stop(inspected, pf.get("keep_containers") or []):
+                c["result"] = sh(["docker", "stop", "-t", "60", c["name"]], 120)
+                rec["containers"].append(c)
+                self.log(f"docker stop {c['name']} ({c['image']}): {c['result']}")
+        if not any(rec[k] for k in ("sparkrun_workloads", "systemd_units", "containers")):
+            self.log("nothing to stop")
+        for e in rec["errors"]:
+            self.log(f"preflight error: {e}")
+
     def main(self) -> int:
         tee_output(self.dir / "harness.log")
         self.log(f"run {self.run_id} recipe={self.recipe} smoke={self.smoke} dry_run={self.dry_run}")
@@ -340,6 +381,8 @@ class Harness:
         os.chdir(self.dir)
         from sparkrun.application import initialize
         self.sctx = initialize()
+        self.preflight()
+        self.write_summary()
         if self.health():
             self.log(f"ERROR: something already serves on port {self.port}; refusing to benchmark it")
             return 2

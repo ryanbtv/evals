@@ -100,6 +100,19 @@ class TestSummary(unittest.TestCase):
         self.assertIn("| 6 |", lb)
 
 
+class TestPreflight(unittest.TestCase):
+    def test_gpu_containers(self):
+        def c(name, running=True, dev=False, runtime="runc", env=()):
+            return {"Name": "/" + name, "Id": "abcdef1234567890", "State": {"Running": running},
+                    "HostConfig": {"DeviceRequests": [{"Driver": "nvidia"}] if dev else None, "Runtime": runtime},
+                    "Config": {"Image": "img", "Env": list(env)}}
+        got = lib.gpu_containers_to_stop([
+            c("caddy"), c("bifrost", dev=True), c("vllm-stack", dev=True), c("old", running=False, dev=True),
+            c("rt", runtime="nvidia"), c("envgpu", env=["NVIDIA_VISIBLE_DEVICES=all"]), c("envvoid", env=["NVIDIA_VISIBLE_DEVICES=void"]),
+        ], keep=["caddy", "bifrost", "dockhand", "dockhand-postgres"])
+        self.assertEqual([x["name"] for x in got], ["vllm-stack", "rt", "envgpu"])
+
+
 class TestSanitize(unittest.TestCase):
     def test_sanitize(self):
         s = lib.sanitize_text("path /home/ryanb/x host dgx01.ff.lan ip 192.168.1.5 10.0.0.1 pub 8.8.8.8 "

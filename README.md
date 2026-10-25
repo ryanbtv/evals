@@ -36,7 +36,12 @@ The recipe path is the only input. Change parameters only in `bench/config.yaml`
 and only between benchmark generations.
 
 The driver runs with sparkrun's own interpreter (`SPARKRUN_PYTHON` overrides it).
-It refuses to start when something already answers on the recipe's port.
+A **preflight** first frees the GPU: it stops the `preflight.systemd_units` from the config
+(`sudo -n`), every sparkrun workload reported by `sparkrun.api.status` (via
+`sparkrun.api.stop`), and any other running container that requests the GPU, except
+`preflight.keep_containers`. Everything stopped is listed in `platform.json → preflight`
+and in `harness.log`. Nothing is restarted afterwards. The driver then refuses to start
+if something still answers on the recipe's port.
 From a workstation: `DGX_HOST=user@host scripts/sync.sh deploy`, then
 `scripts/sync.sh pull` to fetch `runs/` and `leaderboard.md` for committing.
 

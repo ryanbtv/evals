@@ -7,6 +7,11 @@ target:
   cluster: null          # null = sparkrun's saved default cluster
   health_timeout_s: 10   # per HTTP health probe of the reused server
 
+# Before benchmarking, stop every other sparkrun workload and GPU container.
+preflight:
+  keep_containers: [caddy, bifrost, dockhand, dockhand-postgres]
+  systemd_units: [dgx-model-stacks.service]   # stopped (sudo -n) if active; not restarted
+
 performance:
   framework: llama-benchy
   bench_args:
