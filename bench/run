@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Usage: ./bench/run <recipe-path>     (BENCH_SMOKE=1 for harness validation only)
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PATH="$HOME/.local/bin:$PATH"
+py="${SPARKRUN_PYTHON:-$HOME/.local/share/uv/tools/sparkrun/bin/python}"
+[[ $# -ge 1 ]] || { echo "usage: $0 <recipe-path> [--dry-run]" >&2; exit 64; }
+exec "$py" -u "$here/driver.py" "$@"

@@ -1,0 +1,50 @@
+# Fixed benchmark parameters. Every model runs with exactly these values.
+# The recipe path given to ./bench/run is the only per-run input.
+harness_version: 1
+
+target:
+  solo: true
+  cluster: null          # null = sparkrun's saved default cluster
+  health_timeout_s: 10   # per HTTP health probe of the reused server
+
+performance:
+  framework: llama-benchy
+  bench_args:
+    pp: [2048]
+    tg: [128]
+    depth: [0, 4096, 16384, 32768, 65536, 131072, 196608, 258048]
+    concurrency: [1, 2, 4, 8]
+    runs: 3
+    prefix_caching: true
+  timeout_s: 5400        # per (depth, concurrency) task
+
+tools:
+  framework: tool-eval-bench
+  bench_args:
+    ref: v2.8.0
+    trials: 3
+    hardmode: true
+    temperature: 0.0
+  timeout_s: 21600       # whole suite
+
+ctf:
+  framework: llama-benchy
+  threshold_tok_s: 10.0  # per-request decode speed floor
+  depths: [0, 32768, 131072]
+  ramp: [1, 2, 4, 8, 16, 32, 64, 128]
+  bench_args:
+    pp: [2048]
+    tg: [128]
+    runs: 1
+    prefix_caching: true
+  timeout_s: 3600        # per probe
+
+# BENCH_SMOKE=1 overlays these values. Harness validation only.
+smoke:
+  performance:
+    bench_args: {depth: [0], concurrency: [1], runs: 1}
+  tools:
+    bench_args: {trials: 1, hardmode: false}
+  ctf:
+    depths: [0]
+    ramp: [1, 2, 4]
