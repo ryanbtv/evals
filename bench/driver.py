@@ -103,8 +103,9 @@ class Harness:
         self.dir = REPO / "raw-runs" / self.run_id
         self.dir.mkdir(parents=True)
         (self.dir / "diagnostics").mkdir()
-        (self.dir / "ctf").mkdir()
         self.phases: dict[str, dict] = {}
+        self.results: dict = {}
+        self.benchmark_id: str | None = None
         self.summary: dict = {}
         self.platform: dict = {}
         self.current_phase = "setup"
@@ -122,6 +123,8 @@ class Harness:
         with open(self.dir / "progress.ndjson", "a") as f:
             f.write(json.dumps(rec, default=str) + "\n")
         d = ev.data
+        if d.get("benchmark_id"):
+            self.benchmark_id = d["benchmark_id"]
         text = str(d.get("msg") or d.get("line") or "")
         if text.startswith("Pinned llama-benchy version:"):
             self.platform.setdefault("framework_versions", {})["llama-benchy"] = text.split(":", 1)[1].strip()
@@ -161,6 +164,7 @@ class Harness:
         if skip:
             self.skip_run_calls += 1
         result, err = None, None
+        self.benchmark_id = None
         try:
             result = benchmark(opts, sctx=self.sctx)
         except BenchmarkFinalizationFailed as e:
@@ -170,6 +174,8 @@ class Harness:
         except Exception as e:  # noqa: BLE001
             err = f"{type(e).__name__}: {e}"
             traceback.print_exc()
+        finally:
+            self.recover(output, getattr(result, "state_dir", None))
         if result is not None:
             if getattr(result, "run_result", None) is not None:
                 self.launches += 1
@@ -187,6 +193,38 @@ class Harness:
             self.log(f"benchmark error: {err}")
         return result, err
 
+    def recover(self, output: Path, state_dir: str | None) -> None:
+        """Rebuild <output>.json from sparkrun's per-task cache when the phase did not export it.
+
+        Also runs while a SIGTERM/KeyboardInterrupt unwinds the benchmark call.
+        """
+        if self.dry_run or output.with_suffix(".json").exists():
+            return
+        try:
+            if state_dir:
+                sdir = Path(state_dir)
+            elif self.benchmark_id:
+                sdir = Path.home() / ".cache" / "sparkrun" / "benchmarks" / self.benchmark_id
+            else:
+                return
+            runs = sdir / "runs"
+            if not runs.is_dir():
+                return
+            tasks = []
+            for f in sorted(runs.glob("*.json")):
+                try:
+                    tasks.append(json.loads(f.read_text()))
+                except ValueError:
+                    pass
+            shutil.copytree(runs, self.dir / f"{output.stem}-tasks", dirs_exist_ok=True)
+            data = lib.consolidate_tasks(tasks)
+            if data:
+                data["recovered_from_task_cache"] = True
+                output.with_suffix(".json").write_text(lib.jdump(data))
+                self.log(f"recovered {len(tasks)} task result(s) from {sdir} into {output.with_suffix('.json').name}")
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+
     @staticmethod
     def results_of(result, output: Path) -> dict:
         # The exported JSON sidecar holds the framework's native shape; result.results
@@ -202,7 +240,7 @@ class Harness:
         res = (result.results if result is not None else None) or {}
         return res.get("json") if isinstance(res.get("json"), dict) else res
 
-    def phase(self, name: str, fn) -> None:
+    def phase(self, name: str, fn, summarize=None) -> None:
         self.current_phase = name
         t0 = time.monotonic()
         rec = {"status": "running", "started_at": now()}
@@ -220,6 +258,14 @@ class Harness:
             if isinstance(e, (KeyboardInterrupt, SystemExit)):
                 raise
         finally:
+            if summarize is not None:
+                try:
+                    err = summarize(rec.get("error"))
+                    if rec["status"] == "ok" and err:
+                        rec["status"] = "failed"
+                    rec["error"] = err
+                except Exception:  # noqa: BLE001
+                    traceback.print_exc()
             rec["duration_s"] = round(time.monotonic() - t0, 1)
             rec["ended_at"] = now()
             self.log(f"phase {name}: {rec['status']} in {rec['duration_s']}s {rec.get('error') or ''}")
@@ -228,12 +274,16 @@ class Harness:
     # ------------------------------------------------------------ phases
     def run_perf(self):
         c = self.cfg["performance"]
-        out = self.dir / "perf.yaml"
-        result, err = self.bench(category="performance", framework=c["framework"], bench_args=c["bench_args"], output=out, timeout=c["timeout_s"])
-        res = self.results_of(result, out)
-        self.summary["perf_grid"] = lib.perf_grid(res, c["bench_args"]["depth"], c["bench_args"]["concurrency"])
+        result, err = self.bench(category="performance", framework=c["framework"], bench_args=c["bench_args"], output=self.dir / "perf.yaml", timeout=c["timeout_s"])
         if result is not None:
             self.platform["perf_metadata"] = result.metadata
+        self.results["performance"] = result
+        return err
+
+    def summarize_perf(self, err):
+        c = self.cfg["performance"]
+        res = self.results_of(self.results.get("performance"), self.dir / "perf.yaml")
+        self.summary["perf_grid"] = lib.perf_grid(res, c["bench_args"]["depth"], c["bench_args"]["concurrency"])
         failed = [f"d{x['depth']}c{x['concurrency']}" for x in self.summary["perf_grid"] if not x["ok"]]
         if failed and not self.dry_run:
             err = (err + "; " if err else "") + "failed cells: " + ",".join(failed)
@@ -241,41 +291,16 @@ class Harness:
 
     def run_tools(self):
         c = self.cfg["tools"]
-        out = self.dir / "tools.yaml"
-        result, err = self.bench(category="tools", framework=c["framework"], bench_args=c["bench_args"], output=out, timeout=c["timeout_s"])
-        self.summary["tools"] = lib.tools_score(self.results_of(result, out))
-        self.platform["framework_versions"]["tool-eval-bench"] = self.summary["tools"].get("version") or c["bench_args"].get("ref")
+        result, err = self.bench(category="tools", framework=c["framework"], bench_args=c["bench_args"], output=self.dir / "tools.yaml", timeout=c["timeout_s"])
         if result is not None:
             self.platform["tools_metadata"] = result.metadata
+        self.results["tools"] = result
         return err
 
-    def run_ctf(self):
-        c = self.cfg["ctf"]
-        by_depth, errors = {}, []
-        for depth in c["depths"]:
-            def probe(conc, depth=depth):
-                out = self.dir / "ctf" / f"d{depth}_c{conc}.yaml"
-                args = {**c["bench_args"], "depth": [depth], "concurrency": [conc]}
-                result, err = self.bench(category="performance", framework=c["framework"], bench_args=args, output=out, timeout=c["timeout_s"])
-                rows = [r for r in lib.benchy_rows(self.results_of(result, out)) if r["concurrency"] == conc]
-                row = rows[0] if rows else {}
-                ok = bool(row) and row.get("tg_req_tok_s") is not None
-                if self.dry_run:  # fake a pass at c=1 only, so dry-run exercises exactly one probe
-                    ok, row = conc == 1 and err is None, {"tg_req_tok_s": 0.0}
-                self.log(f"CTF probe depth={depth} c={conc}: ok={ok} tg/req={row.get('tg_req_tok_s')} err={err}")
-                return {"ok": ok, "error": err, **row}
-            try:
-                threshold = 0.0 if self.dry_run else float(c["threshold_tok_s"])
-                ramp = c["ramp"][:2] if self.dry_run else c["ramp"]
-                by_depth[str(depth)] = lib.find_ctf(probe, ramp, threshold)
-                by_depth[str(depth)]["threshold_tok_s"] = c["threshold_tok_s"]
-            except Exception as e:  # noqa: BLE001
-                traceback.print_exc()
-                by_depth[str(depth)] = {"error": f"{type(e).__name__}: {e}"}
-                errors.append(f"d{depth}: {e}")
-            self.summary["ctf"] = {"threshold_tok_s": c["threshold_tok_s"], "by_depth": by_depth}
-            (self.dir / "ctf.json").write_text(lib.jdump(self.summary["ctf"]))
-        return "; ".join(errors) or None
+    def summarize_tools(self, err):
+        self.summary["tools"] = lib.tools_score(self.results_of(self.results.get("tools"), self.dir / "tools.yaml"))
+        self.platform["framework_versions"]["tool-eval-bench"] = self.summary["tools"].get("version") or self.cfg["tools"]["bench_args"].get("ref")
+        return err
 
     # ------------------------------------------------------------ outputs
     def write_summary(self) -> None:
@@ -387,9 +412,8 @@ class Harness:
             self.log(f"ERROR: something already serves on port {self.port}; refusing to benchmark it")
             return 2
         try:
-            self.phase("performance", self.run_perf)
-            self.phase("tools", self.run_tools)
-            self.phase("ctf", self.run_ctf)
+            self.phase("performance", self.run_perf, self.summarize_perf)
+            self.phase("tools", self.run_tools, self.summarize_tools)
         finally:
             self.stop_server()
             self.platform["framework_versions"].setdefault("llama-benchy", find_benchy_version(self.platform))

@@ -1,6 +1,6 @@
 # Fixed benchmark parameters. Every model runs with exactly these values.
 # The recipe path given to ./bench/run is the only per-run input.
-harness_version: 1
+harness_version: 2
 
 target:
   solo: true
@@ -17,11 +17,16 @@ performance:
   bench_args:
     pp: [2048]
     tg: [128]
-    depth: [0, 4096, 16384, 32768, 65536, 131072, 196608, 258048]
-    concurrency: [1, 2, 4, 8]
+    # short = 65536; long = 259968, the deepest context with depth + pp + tg <= 262144
+    # (259968 + 2048 + 128 = 262144, the recipe's model max length).
+    depth: [65536, 259968]
+    concurrency: [1, 2, 4]
     runs: 3
     prefix_caching: true
-  timeout_s: 5400        # per (depth, concurrency) task
+  # Per (depth, concurrency) cell. The longest legitimate cell (long depth, c=4) is
+  # estimated at ~8,100 s from the 2026-10-25 run (one run of 3 took ~2,705 s at 258048).
+  # 14,400 s (sparkrun's default) gives ~1.8x headroom yet still bounds a hang at 4 h.
+  timeout_s: 14400
 
 tools:
   framework: tool-eval-bench
@@ -32,24 +37,9 @@ tools:
     temperature: 0.0
   timeout_s: 21600       # whole suite
 
-ctf:
-  framework: llama-benchy
-  threshold_tok_s: 10.0  # per-request decode speed floor
-  depths: [0, 32768, 131072]
-  ramp: [1, 2, 4, 8, 16, 32, 64, 128]
-  bench_args:
-    pp: [2048]
-    tg: [128]
-    runs: 1
-    prefix_caching: true
-  timeout_s: 3600        # per probe
-
 # BENCH_SMOKE=1 overlays these values. Harness validation only.
 smoke:
   performance:
     bench_args: {depth: [0], concurrency: [1], runs: 1}
   tools:
     bench_args: {trials: 1, hardmode: false}
-  ctf:
-    depths: [0]
-    ramp: [1, 2, 4]

@@ -9,7 +9,7 @@ Every model runs the same fixed schedule, so results compare directly.
 ```
 bench/run           entry point: ./bench/run <recipe-path>
 bench/driver.py     orchestration (sparkrun API calls, phases, server reuse, teardown)
-bench/lib.py        pure logic: parsing, CTF search, summaries, leaderboard, sanitization
+bench/lib.py        pure logic: parsing, task-cache recovery, summaries, leaderboard, sanitization
 bench/config.yaml   all benchmark parameters (committed; identical for every model)
 tests/              offline unit tests (stdlib unittest)
 scripts/sync.sh     deploy the harness to the Spark / pull sanitized results back
@@ -36,6 +36,8 @@ The recipe path is the only input. Change parameters only in `bench/config.yaml`
 and only between benchmark generations.
 
 The driver runs with sparkrun's own interpreter (`SPARKRUN_PYTHON` overrides it).
+A full run of Qwen3.8-27B-NVFP4 is estimated at about 6.5 h: about 7 min launch, about
+4.6 h performance (the long-depth c=4 cell alone is about 2.3 h) and about 1.5–2 h tools.
 A **preflight** first frees the GPU: it stops the `preflight.systemd_units` from the config
 (`sudo -n`), every sparkrun workload reported by `sparkrun.api.status` (via
 `sparkrun.api.stop`), and any other running container that requests the GPU, except
@@ -52,12 +54,18 @@ Each phase runs inside its own `sparkrun.api.capture_diagnostics` bundle
 next phase still runs.
 
 1. **performance** — llama-benchy 0.4.0 (pinned by sparkrun): pp 2048, tg 128,
-   depth 0 / 4k / 16k / 32k / 64k / 128k / 192k / 252k (258048 = 262144 minus headroom),
-   concurrency 1 / 2 / 4 / 8, 3 runs per cell, prefix caching on. One sparkrun task
-   per (depth, concurrency); `exit_on_first_fail=False`, so a cell that exhausts the KV
-   cache is reported as `FAIL` and the sweep continues.
+   two depths — **short** 65536 and **long** 259968 — at concurrency 1 / 2 / 4, 3 runs per
+   cell, prefix caching on. 259968 is the deepest context that fits the model's 262144
+   window with the request on top: 259968 + 2048 (pp) + 128 (tg) = 262144.
+   One sparkrun task per (depth, concurrency), each with a 14,400 s timeout;
+   `exit_on_first_fail=False`, so a cell that times out or exhausts the KV cache is
+   reported as `FAIL` and the sweep continues.
 2. **tools** — tool-eval-bench v2.8.0, 3 trials, hard mode, temperature 0.
-3. **concurrency-to-failure (CTF)** — see below.
+
+If a phase is interrupted (timeout, SIGTERM, crash) before sparkrun exports its results,
+the driver rebuilds `perf.json` / `tools.json` from sparkrun's per-task cache
+(`~/.cache/sparkrun/benchmarks/<benchmark_id>/runs/`), copies the raw task files to
+`perf-tasks/` / `tools-tasks/`, and marks the JSON `recovered_from_task_cache: true`.
 
 The inference server launches once (`no_stop=True`) and later calls reuse it with
 `skip_run=True`. Before each call the driver checks `GET /v1/models`; if the server
@@ -84,19 +92,13 @@ stopped through `sparkrun.api.stop` in a `finally` block, with a
   (timeout, request error, KV exhaustion or server crash).
 - **Tool score** — tool-eval-bench `final_score` (0–100) plus its rating, deployability,
   responsiveness and points.
-- **CTF** — per depth (0, 32768, 131072): the highest concurrency at which the
-  per-request decode speed (`tg_req_tok_s`) is ≥ 10 tok/s and the requests succeed.
-  The harness ramps 1, 2, 4 … 128 until the first failing probe, then bisects the
-  integer gap between the last pass and the first fail. A probe is pp 2048, tg 128,
-  1 run. `≥128` means it never failed within the ramp; `0` means even one request was
-  below the threshold.
 
 ## Outputs per run
 
 `recipe.yml` (verbatim), `config.yaml` (effective config), `platform.json` (hardware,
 OS, kernel, driver, CUDA, sparkrun / llama-benchy / tool-eval-bench versions, container
 image and digest, harness commit, config), `perf.{yaml,json,csv}`,
-`tools.{yaml,json,csv}`, `ctf/d<depth>_c<conc>.{yaml,json,csv}`, `ctf.json`,
+`tools.{yaml,json,csv}`, `perf-tasks/` and `tools-tasks/` (only after a recovery),
 `diagnostics/*.ndjson`, `harness.log` (full stdout/stderr), `progress.ndjson`
 (every sparkrun progress event), `summary.md`, `summary.json`.
 
@@ -118,5 +120,5 @@ copy stays on the benchmark host under `raw-runs/`.
 ## Smoke mode
 
 `BENCH_SMOKE=1` overlays `smoke:` from the config (depth 0, concurrency 1, 1 run;
-1 tool trial without hard mode; CTF at depth 0 up to concurrency 4). It exists only
+1 tool trial without hard mode). It exists only
 to validate the harness; its results go to `smoke-runs/` and never to the leaderboard.

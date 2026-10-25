@@ -1,4 +1,4 @@
-"""Pure logic: config merge, result parsing, CTF search, summaries, sanitization.
+"""Pure logic: config merge, result parsing, task-cache consolidation, summaries, sanitization.
 
 No sparkrun imports here, so the unit tests run offline.
 """
@@ -9,7 +9,7 @@ import copy
 import json
 import re
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 
 # ---------------------------------------------------------------- config
@@ -90,50 +90,22 @@ def perf_grid(results: dict | None, depths: list[int], concs: list[int]) -> list
     return cells
 
 
-# ---------------------------------------------------------------- CTF
+def consolidate_tasks(tasks: list) -> dict:
+    """Merge per-task framework JSON from sparkrun's task cache.
 
-def find_ctf(probe: Callable[[int], dict], ramp: list[int], threshold: float) -> dict:
-    """Highest concurrency whose per-request decode speed is >= threshold.
-
-    probe(c) -> {"ok": bool, "tg_req_tok_s": float|None, ...}. A probe passes
-    when ok and tg_req_tok_s >= threshold. Ramp until the first fail, then
-    bisect the integer gap between the last pass and the first fail.
+    llama-benchy tasks each hold {"benchmarks": [...]} and are concatenated, as
+    sparkrun's own consolidation does. Anything else (tool-eval-bench runs one
+    suite task) is returned as the single task envelope.
     """
-    probes: dict[int, dict] = {}
-
-    def run(c: int) -> bool:
-        if c not in probes:
-            r = dict(probe(c))
-            tps = r.get("tg_req_tok_s")
-            r["pass"] = bool(r.get("ok")) and tps is not None and tps >= threshold
-            r["concurrency"] = c
-            probes[c] = r
-        return probes[c]["pass"]
-
-    last_pass, first_fail = 0, None
-    for c in ramp:
-        if run(c):
-            last_pass = c
-        else:
-            first_fail = c
-            break
-    capped = first_fail is None
-    if not capped:
-        lo, hi = last_pass, first_fail
-        while hi - lo > 1:
-            mid = (lo + hi) // 2
-            if run(mid):
-                lo = mid
-            else:
-                hi = mid
-        last_pass, first_fail = lo, hi
-    return {
-        "ctf": last_pass,
-        "first_fail": first_fail,
-        "capped_at_ramp_max": capped,
-        "threshold_tok_s": threshold,
-        "probes": [probes[c] for c in sorted(probes)],
-    }
+    tasks = [t for t in tasks if isinstance(t, dict) and t]
+    if not tasks:
+        return {}
+    if all("benchmarks" in t for t in tasks):
+        benches = [b for t in tasks for b in t.get("benchmarks") or [] if isinstance(b, dict)]
+        return {"model": next((t.get("model") for t in tasks if t.get("model")), ""),
+                "max_concurrency": max([int(b.get("concurrency") or 0) for b in benches] or [0]),
+                "benchmarks": benches}
+    return dict(tasks[-1])
 
 
 # ---------------------------------------------------------------- tools
@@ -201,25 +173,14 @@ def render_summary(s: dict) -> str:
               "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
               f"| {t.get('final_score')} | {t.get('rating')} | {t.get('deployability')} | {t.get('responsiveness')} | {t.get('points')}/{t.get('max_points')} | {t.get('scenarios')} | {t.get('pass')} | {t.get('partial')} | {t.get('fail')} | {t.get('trials') or 1} |", "",
               "Pass/partial/fail count the scenario rows of the last trial; the score aggregates all trials.", ""]
-    ctf = s.get("ctf") or {}
-    if ctf:
-        L += [f"## Concurrency to failure (per-request decode ≥ {ctf.get('threshold_tok_s')} tok/s)", "",
-              "| Depth | CTF | First fail | Probes (c: tok/s/req) |", "|---:|---:|---:|---|"]
-        for d, r in (ctf.get("by_depth") or {}).items():
-            if r.get("error"):
-                L.append(f"| {d} | ERROR | — | {r['error'][:120]} |")
-                continue
-            pr = ", ".join(f"{p['concurrency']}: {'FAIL' if not p.get('ok') else _f(p.get('tg_req_tok_s'))}" for p in r.get("probes", []))
-            ctfv = f"≥{r['ctf']}" if r.get("capped_at_ramp_max") else str(r["ctf"])
-            L.append(f"| {d} | {ctfv} | {r.get('first_fail') or '—'} | {pr} |")
-        L.append("")
     return "\n".join(L)
 
 
 def leaderboard(summaries: list[dict]) -> str:
     L = ["# Leaderboard", "", "Generated from `runs/*/summary.json`. See each run's `summary.md` for full grids.", "",
-         "| Run | Model | tg c1 d0 | tg/req c8 d0 | pp c1 d0 | tg c1 d131072 | Tools score | CTF d0 | CTF d32768 | CTF d131072 |",
-         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
+         "Decode tok/s per request (tg/req) and prefill tok/s (pp) at the short (65536) and long (259968) depths.", "",
+         "| Run | Model | tg/req d65536 c1 | tg/req d65536 c4 | pp d65536 c1 | tg/req d259968 c1 | tg/req d259968 c4 | pp d259968 c1 | Tools score |",
+         "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
 
     def cell(s, d, c, f):
         for x in s.get("perf_grid") or []:
@@ -227,17 +188,11 @@ def leaderboard(summaries: list[dict]) -> str:
                 return _f(x.get(f), 0 if f == "pp_tok_s" else 1) if x["ok"] else "FAIL"
         return "—"
 
-    def ctf(s, d):
-        r = ((s.get("ctf") or {}).get("by_depth") or {}).get(str(d)) or {}
-        if "ctf" not in r:
-            return "—"
-        return f"≥{r['ctf']}" if r.get("capped_at_ramp_max") else str(r["ctf"])
-
     for s in sorted(summaries, key=lambda x: x.get("run_id", ""), reverse=True):
         rid = s.get("run_id", "")
-        L.append(f"| [{rid}](runs/{rid}/summary.md) | {s.get('model')} | {cell(s,0,1,'tg_tok_s')} | {cell(s,0,8,'tg_req_tok_s')} | "
-                 f"{cell(s,0,1,'pp_tok_s')} | {cell(s,131072,1,'tg_tok_s')} | {(s.get('tools') or {}).get('final_score', '—')} | "
-                 f"{ctf(s,0)} | {ctf(s,32768)} | {ctf(s,131072)} |")
+        L.append(f"| [{rid}](runs/{rid}/summary.md) | {s.get('model')} | {cell(s,65536,1,'tg_req_tok_s')} | {cell(s,65536,4,'tg_req_tok_s')} | "
+                 f"{cell(s,65536,1,'pp_tok_s')} | {cell(s,259968,1,'tg_req_tok_s')} | {cell(s,259968,4,'tg_req_tok_s')} | "
+                 f"{cell(s,259968,1,'pp_tok_s')} | {(s.get('tools') or {}).get('final_score', '—')} |")
     return "\n".join(L) + "\n"
 
 

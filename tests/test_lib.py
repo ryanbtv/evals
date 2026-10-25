@@ -12,42 +12,15 @@ def row(depth, conc, tg, tg_req=None, ctx=False):
             "tg_req_throughput": None if tg_req is None else {"mean": tg_req}, "ttfr": 250}
 
 
-class TestCTF(unittest.TestCase):
-    def mk(self, speed_of):
-        calls = []
+class TestRecovery(unittest.TestCase):
+    def test_consolidate_benchy_tasks(self):
+        out = lib.consolidate_tasks([{"model": "m", "benchmarks": [row(65536, 1, 20.0)]}, {}, {"model": "m", "benchmarks": [row(65536, 4, 40.0, 10.0)]}])
+        self.assertEqual((out["model"], out["max_concurrency"], len(out["benchmarks"])), ("m", 4, 2))
+        self.assertTrue(lib.perf_grid(out, [65536], [4])[0]["ok"])
 
-        def probe(c):
-            calls.append(c)
-            s = speed_of(c)
-            return {"ok": s is not None, "tg_req_tok_s": s}
-        return probe, calls
-
-    def test_bisect_exact(self):
-        probe, calls = self.mk(lambda c: 100.0 / c)  # >=10 up to c=10
-        r = lib.find_ctf(probe, [1, 2, 4, 8, 16, 32], 10.0)
-        self.assertEqual(r["ctf"], 10)
-        self.assertEqual(r["first_fail"], 11)
-        self.assertEqual(len(calls), len(set(calls)))
-        self.assertFalse(r["capped_at_ramp_max"])
-
-    def test_request_failure_counts_as_fail(self):
-        probe, _ = self.mk(lambda c: None if c >= 6 else 50.0)
-        self.assertEqual(lib.find_ctf(probe, [1, 2, 4, 8], 10.0)["ctf"], 5)
-
-    def test_first_probe_fails(self):
-        probe, calls = self.mk(lambda c: 5.0)
-        r = lib.find_ctf(probe, [1, 2, 4], 10.0)
-        self.assertEqual((r["ctf"], r["first_fail"], calls), (0, 1, [1]))
-
-    def test_capped(self):
-        probe, _ = self.mk(lambda c: 99.0)
-        r = lib.find_ctf(probe, [1, 2, 4], 10.0)
-        self.assertEqual(r["ctf"], 4)
-        self.assertTrue(r["capped_at_ramp_max"])
-
-    def test_threshold_inclusive(self):
-        probe, _ = self.mk(lambda c: 10.0 if c <= 3 else 9.99)
-        self.assertEqual(lib.find_ctf(probe, [1, 2, 4], 10.0)["ctf"], 3)
+    def test_consolidate_tool_suite_and_empty(self):
+        self.assertEqual(lib.consolidate_tasks([{"final_score": 90, "scores": {}}])["final_score"], 90)
+        self.assertEqual(lib.consolidate_tasks([]), {})
 
 
 class TestParsing(unittest.TestCase):
@@ -82,22 +55,20 @@ class TestParsing(unittest.TestCase):
 class TestSummary(unittest.TestCase):
     def summary(self):
         return {"run_id": "20260101T000000Z--m", "model": "m", "phases": {"performance": {"status": "failed", "duration_s": 5, "error": "x|y"}},
-                "perf_grid": lib.perf_grid({"benchmarks": [row(0, 1, 20.0)]}, [0, 131072], [1, 8]),
-                "tools": {"final_score": 80}, "ctf": {"threshold_tok_s": 10, "by_depth": {
-                    "0": {"ctf": 6, "first_fail": 7, "probes": [{"concurrency": 1, "ok": True, "tg_req_tok_s": 30.0}]},
-                    "32768": {"error": "boom"}}}}
+                "perf_grid": lib.perf_grid({"benchmarks": [row(65536, 1, 20.0)]}, [65536, 259968], [1, 4]),
+                "tools": {"final_score": 80}}
 
     def test_render(self):
         md = lib.render_summary(self.summary())
         self.assertIn("FAIL", md)
-        self.assertIn("| 0 | 6 | 7 |", md)
         self.assertIn("x\\|y", md)
-        self.assertIn("ERROR", md)
+        self.assertNotIn("oncurrency to failure", md)
 
     def test_leaderboard(self):
         lb = lib.leaderboard([self.summary()])
         self.assertIn("| 20.0 |", lb)
-        self.assertIn("| 6 |", lb)
+        self.assertIn("| FAIL |", lb)
+        self.assertIn("| 80 |", lb)
 
 
 class TestPreflight(unittest.TestCase):
