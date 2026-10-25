@@ -8,7 +8,7 @@
     "performance": {
       "status": "interrupted",
       "started_at": "2026-10-25T00:03:00+00:00",
-      "error": "stopped at 11h poll cap during task 30 (d258048 c4); d131072c8, d196608c4, d196608c8 timed out at 5400s; d258048 c4/c8 not run",
+      "error": "stopped at 11h poll cap during task 30 (d258048 c4); d131072c8, d196608c4, d196608c8 timed out at 5400s; d258048 c4/c8 not run | cells: d131072c8:fail, d196608c4:fail, d196608c8:fail, d258048c4:fail, d258048c8:fail",
       "duration_s": 39085.6,
       "ended_at": "2026-10-25T10:54:26+00:00"
     },
@@ -33,7 +33,9 @@
     {
       "depth": 0,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 2290.7765881930154,
       "pp_req_tok_s": 2290.7765881930154,
       "tg_tok_s": 26.736724183815742,
@@ -44,7 +46,9 @@
     {
       "depth": 0,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 2184.0020842085473,
       "pp_req_tok_s": 1094.4724379174238,
       "tg_tok_s": 50.282930839307575,
@@ -55,7 +59,9 @@
     {
       "depth": 0,
       "concurrency": 4,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 1934.5794953009681,
       "pp_req_tok_s": 490.78568892122775,
       "tg_tok_s": 77.48162762796787,
@@ -66,7 +72,9 @@
     {
       "depth": 0,
       "concurrency": 8,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 1187.1210679728385,
       "pp_req_tok_s": 321.16975801417277,
       "tg_tok_s": 68.13434587648479,
@@ -77,7 +85,9 @@
     {
       "depth": 4096,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 688.4526092698679,
       "pp_req_tok_s": 688.4526092698679,
       "tg_tok_s": 27.679466783746978,
@@ -88,7 +98,9 @@
     {
       "depth": 4096,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 943.9351235147133,
       "pp_req_tok_s": 473.8202119042449,
       "tg_tok_s": 44.70728684590538,
@@ -99,7 +111,9 @@
     {
       "depth": 4096,
       "concurrency": 4,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 956.0689029169556,
       "pp_req_tok_s": 268.60979068043036,
       "tg_tok_s": 54.33888091906429,
@@ -110,7 +124,9 @@
     {
       "depth": 4096,
       "concurrency": 8,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 644.6967938619867,
       "pp_req_tok_s": 165.5884081148636,
       "tg_tok_s": 42.70372261779958,
@@ -121,7 +137,9 @@
     {
       "depth": 16384,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 354.87016662538457,
       "pp_req_tok_s": 354.87016662538457,
       "tg_tok_s": 26.563616556117292,
@@ -132,7 +150,9 @@
     {
       "depth": 16384,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 353.5991827070798,
       "pp_req_tok_s": 177.24274564163332,
       "tg_tok_s": 42.86788496173568,
@@ -143,7 +163,9 @@
     {
       "depth": 16384,
       "concurrency": 4,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 401.84777319098004,
       "pp_req_tok_s": 114.2343403799433,
       "tg_tok_s": 37.894527210641115,
@@ -154,7 +176,9 @@
     {
       "depth": 16384,
       "concurrency": 8,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 278.37157241296853,
       "pp_req_tok_s": 117.57076754074505,
       "tg_tok_s": 16.956470692654644,
@@ -165,7 +189,9 @@
     {
       "depth": 32768,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 287.6888947419299,
       "pp_req_tok_s": 287.6888947419299,
       "tg_tok_s": 25.138273979807224,
@@ -176,7 +202,9 @@
     {
       "depth": 32768,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 287.4322523952032,
       "pp_req_tok_s": 144.03225537642123,
       "tg_tok_s": 38.449817008605855,
@@ -187,7 +215,9 @@
     {
       "depth": 32768,
       "concurrency": 4,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 327.9266666669828,
       "pp_req_tok_s": 92.91841924468434,
       "tg_tok_s": 33.12643140828001,
@@ -198,7 +228,9 @@
     {
       "depth": 32768,
       "concurrency": 8,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 126.12735728460014,
       "pp_req_tok_s": 67.19555243061102,
       "tg_tok_s": 7.903905479330213,
@@ -209,7 +241,9 @@
     {
       "depth": 65536,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 206.4749701266397,
       "pp_req_tok_s": 206.4749701266397,
       "tg_tok_s": 22.405968353869227,
@@ -220,7 +254,9 @@
     {
       "depth": 65536,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 208.2935689768292,
       "pp_req_tok_s": 104.3327885943536,
       "tg_tok_s": 39.56849023660707,
@@ -231,7 +267,9 @@
     {
       "depth": 65536,
       "concurrency": 4,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 111.08637351747761,
       "pp_req_tok_s": 62.69089551305378,
       "tg_tok_s": 8.395821049018792,
@@ -242,7 +280,9 @@
     {
       "depth": 65536,
       "concurrency": 8,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 47.24837112916165,
       "pp_req_tok_s": 15.724930783228288,
       "tg_tok_s": 3.428799414183473,
@@ -253,7 +293,9 @@
     {
       "depth": 131072,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 134.73105478035322,
       "pp_req_tok_s": 134.73105478035322,
       "tg_tok_s": 19.921796050289444,
@@ -264,7 +306,9 @@
     {
       "depth": 131072,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 136.55556166970584,
       "pp_req_tok_s": 68.37088835436121,
       "tg_tok_s": 26.000283726944968,
@@ -275,7 +319,9 @@
     {
       "depth": 131072,
       "concurrency": 4,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 19.98302214820919,
       "pp_req_tok_s": 9.741354535750443,
       "tg_tok_s": 1.8317402233583102,
@@ -286,12 +332,16 @@
     {
       "depth": 131072,
       "concurrency": 8,
-      "ok": false
+      "status": "fail",
+      "ok": false,
+      "ctx_only": false
     },
     {
       "depth": 196608,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 100.23100035437449,
       "pp_req_tok_s": 100.23100035437449,
       "tg_tok_s": 19.259439923174998,
@@ -302,7 +352,9 @@
     {
       "depth": 196608,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 15.566706064316428,
       "pp_req_tok_s": 18.613597886438516,
       "tg_tok_s": 16.32750028847904,
@@ -313,17 +365,23 @@
     {
       "depth": 196608,
       "concurrency": 4,
-      "ok": false
+      "status": "fail",
+      "ok": false,
+      "ctx_only": false
     },
     {
       "depth": 196608,
       "concurrency": 8,
-      "ok": false
+      "status": "fail",
+      "ok": false,
+      "ctx_only": false
     },
     {
       "depth": 258048,
       "concurrency": 1,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 129.88464212569826,
       "pp_req_tok_s": 129.88464212569826,
       "tg_tok_s": 16.761831846131763,
@@ -334,7 +392,9 @@
     {
       "depth": 258048,
       "concurrency": 2,
+      "status": "ok",
       "ok": true,
+      "ctx_only": false,
       "pp_tok_s": 8.615284594335053,
       "pp_req_tok_s": 46.313127826005626,
       "tg_tok_s": 0.6463881501882914,
@@ -345,12 +405,17 @@
     {
       "depth": 258048,
       "concurrency": 4,
-      "ok": false
+      "status": "fail",
+      "ok": false,
+      "ctx_only": false
     },
     {
       "depth": 258048,
       "concurrency": 8,
-      "ok": false
+      "status": "fail",
+      "ok": false,
+      "ctx_only": false
     }
-  ]
+  ],
+  "resummarized_with": "58ba17a9ec04ca573ccbee86daa79cd761308075"
 }

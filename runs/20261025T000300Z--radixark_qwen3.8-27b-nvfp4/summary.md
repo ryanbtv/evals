@@ -8,7 +8,7 @@
 
 | Phase | Status | Duration (s) | Error |
 |---|---|---:|---|
-| performance | interrupted | 39086 | stopped at 11h poll cap during task 30 (d258048 c4); d131072c8, d196608c4, d196608c8 timed out at 5400s; d258048 c4/c8 not run |
+| performance | interrupted | 39086 | stopped at 11h poll cap during task 30 (d258048 c4); d131072c8, d196608c4, d196608c8 timed out at 5400s; d258048 c4/c8 not run \| cells: d131072c8:fail, d196608c4:fail, d196608c8:fail, d258048c4:fail, |
 | tools | not run | — | run stopped at poll cap before this phase |
 | ctf | not run | — | run stopped at poll cap before this phase |
 
@@ -63,3 +63,6 @@
 | 131072 | 15205 | 29958 | 252017 | FAIL |
 | 196608 | 20436 | 223907 | FAIL | FAIL |
 | 258048 | 15771 | 328966 | FAIL | FAIL |
+
+† context-load row only: every measured request in the cell failed, so the value is llama-benchy's context-load phase (prefill of the full depth, decode on that context).
+\* some requests in the cell failed; the value averages only the requests that succeeded.
