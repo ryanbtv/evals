@@ -54,40 +54,86 @@ def metric_mean(value: Any) -> float | None:
     return None
 
 
-def benchy_rows(results: dict | None) -> list[dict]:
-    """Measured (non context-prefill) rows from consolidated llama-benchy results."""
-    rows = []
-    for b in (results or {}).get("benchmarks") or []:
-        if not isinstance(b, dict) or b.get("is_context_prefill_phase"):
-            continue
-        conc = int(b.get("concurrency") or 1)
-        tg_total = metric_mean(b.get("tg_throughput"))
-        tg_req = metric_mean(b.get("tg_req_throughput"))
-        if tg_req is None and conc == 1:
-            tg_req = tg_total
-        rows.append({
-            "depth": int(b.get("context_size") or 0),
-            "concurrency": conc,
-            "pp_tok_s": metric_mean(b.get("pp_throughput")),
-            "pp_req_tok_s": metric_mean(b.get("pp_req_throughput")),
-            "tg_tok_s": tg_total,
-            "tg_req_tok_s": tg_req,
-            "ttfr_ms": metric_mean(b.get("ttfr")),
-            "e2e_ttft_ms": metric_mean(b.get("e2e_ttft")),
-        })
-    return rows
+def _benchy_row(b: dict) -> dict:
+    conc = int(b.get("concurrency") or 1)
+    tg_total = metric_mean(b.get("tg_throughput"))
+    tg_req = metric_mean(b.get("tg_req_throughput"))
+    if tg_req is None and conc == 1:
+        tg_req = tg_total
+    return {
+        "depth": int(b.get("context_size") or 0),
+        "concurrency": conc,
+        "pp_tok_s": metric_mean(b.get("pp_throughput")),
+        "pp_req_tok_s": metric_mean(b.get("pp_req_throughput")),
+        "tg_tok_s": tg_total,
+        "tg_req_tok_s": tg_req,
+        "ttfr_ms": metric_mean(b.get("ttfr")),
+        "e2e_ttft_ms": metric_mean(b.get("e2e_ttft")),
+    }
 
 
-def perf_grid(results: dict | None, depths: list[int], concs: list[int]) -> list[dict]:
-    """One cell per (depth, concurrency) in the configured schedule; missing = failed."""
-    by_key = {(r["depth"], r["concurrency"]): r for r in benchy_rows(results)}
+def benchy_rows(results: dict | None, context_phase: bool = False) -> list[dict]:
+    """Rows from consolidated llama-benchy results.
+
+    context_phase=False: the measured pp/tg rows (the 2048-token prompt on top of
+    the cached depth). context_phase=True: the context-load rows, where llama-benchy
+    prefills `depth` tokens and decodes on that context before the measured request.
+    """
+    return [_benchy_row(b) for b in (results or {}).get("benchmarks") or []
+            if isinstance(b, dict) and bool(b.get("is_context_prefill_phase")) == context_phase]
+
+
+_HTTP_ERR = re.compile(r"^HTTP (\d{3}): (.*)$", re.M)
+
+
+def request_errors(log_text: str) -> dict:
+    """Count failed llama-benchy requests in a task log, with the first message per status."""
+    out: dict = {"count": 0, "by_status": {}, "examples": {}}
+    for status, msg in _HTTP_ERR.findall(log_text or ""):
+        out["count"] += 1
+        out["by_status"][status] = out["by_status"].get(status, 0) + 1
+        out["examples"].setdefault(status, msg[:300])
+    return out
+
+
+def perf_grid(results: dict | None, depths: list[int], concs: list[int], errors: dict | None = None) -> list[dict]:
+    """One cell per (depth, concurrency) in the configured schedule.
+
+    status: "ok" = measured pp/tg row present; "partial" = only the context-load
+    row has numbers (every measured request failed), its values are shown with
+    ctx_only=True; "fail" = nothing. errors maps (depth, conc) -> request_errors().
+    """
+    meas = {(r["depth"], r["concurrency"]): r for r in benchy_rows(results)}
+    ctx = {(r["depth"], r["concurrency"]): r for r in benchy_rows(results, context_phase=True)}
     cells = []
     for d in depths:
         for c in concs:
-            r = by_key.get((d, c))
-            ok = r is not None and r["tg_tok_s"] is not None
-            cells.append({"depth": d, "concurrency": c, "ok": ok, **({k: v for k, v in r.items() if k not in ("depth", "concurrency")} if r else {})})
+            r, x = meas.get((d, c)), ctx.get((d, c))
+            cell = {"depth": d, "concurrency": c}
+            if r is not None and r["tg_tok_s"] is not None:
+                cell.update(status="ok", ok=True, ctx_only=False, **{k: v for k, v in r.items() if k not in ("depth", "concurrency")})
+            elif x is not None and x["tg_tok_s"] is not None:
+                cell.update(status="partial", ok=False, ctx_only=True, **{k: v for k, v in x.items() if k not in ("depth", "concurrency")})
+            else:
+                cell.update(status="fail", ok=False, ctx_only=False)
+            e = (errors or {}).get((d, c))
+            if e and e.get("count"):
+                cell["request_errors"] = e
+            cells.append(cell)
     return cells
+
+
+def cell_text(cell: dict | None, field: str, nd: int) -> str:
+    """FAIL; value; value† (context-load row only); value* (some requests failed)."""
+    if not cell or cell.get("status", "ok" if cell.get("ok") else "fail") == "fail":
+        return "FAIL"
+    v = cell.get(field)
+    text = "—" if v is None else f"{v:.{nd}f}"
+    if cell.get("ctx_only"):
+        text += "†"
+    elif (cell.get("request_errors") or {}).get("count"):
+        text += "*"
+    return text
 
 
 def consolidate_tasks(tasks: list) -> dict:
@@ -128,7 +174,7 @@ def tools_score(results: dict | None) -> dict:
         "version": r.get("tool_eval_bench_version"),
         **counts,
         "trials": stats.get("trials"),
-        "trial_statistics": stats or None,
+        "trial_statistics": {k: v for k, v in stats.items() if k != "per_scenario"} or None,
     }
 
 
@@ -163,9 +209,19 @@ def render_summary(s: dict) -> str:
             for d in depths:
                 vals = []
                 for c in concs:
-                    cell = key.get((d, c))
-                    vals.append("FAIL" if not cell or not cell["ok"] else _f(cell.get(field), nd))
+                    vals.append(cell_text(key.get((d, c)), field, nd))
                 L.append(f"| {d} | " + " | ".join(vals) + " |")
+            L.append("")
+        L += ["† context-load row only: every measured request in the cell failed, so the value is "
+              "llama-benchy's context-load phase (prefill of the full depth, decode on that context).",
+              "\\* some requests in the cell failed; the value averages only the requests that succeeded.", ""]
+        bad = [c for c in grid if (c.get("request_errors") or {}).get("count")]
+        if bad:
+            L += ["### Request errors", "", "| depth | conc | failed requests | first error |", "|---:|---:|---:|---|"]
+            for c in bad:
+                e = c["request_errors"]
+                ex = "; ".join(f"HTTP {k}: {v}" for k, v in e["examples"].items()).replace("|", "\\|")[:240]
+                L.append(f"| {c['depth']} | {c['concurrency']} | {e['count']} | {ex} |")
             L.append("")
     t = s.get("tools")
     if t:
@@ -173,26 +229,35 @@ def render_summary(s: dict) -> str:
               "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
               f"| {t.get('final_score')} | {t.get('rating')} | {t.get('deployability')} | {t.get('responsiveness')} | {t.get('points')}/{t.get('max_points')} | {t.get('scenarios')} | {t.get('pass')} | {t.get('partial')} | {t.get('fail')} | {t.get('trials') or 1} |", "",
               "Pass/partial/fail count the scenario rows of the last trial; the score aggregates all trials.", ""]
+        ts = t.get("trial_statistics") or {}
+        if ts:
+            L += [f"Trials: {ts.get('trials')}; final score mean {ts.get('final_score_mean')} ± {ts.get('final_score_stddev')} "
+                  f"(median {ts.get('final_score_median')}, 95% CI {ts.get('final_score_ci95')}); points mean {ts.get('total_points_mean')} "
+                  f"± {ts.get('total_points_stddev')}; pass@k {ts.get('pass_at_k')}%, pass^k {ts.get('pass_hat_k')}%, "
+                  f"reliability gap {ts.get('reliability_gap')}.", ""]
     return "\n".join(L)
 
 
 def leaderboard(summaries: list[dict]) -> str:
     L = ["# Leaderboard", "", "Generated from `runs/*/summary.json`. See each run's `summary.md` for full grids.", "",
-         "Decode tok/s per request (tg/req) and prefill tok/s (pp) at the short (65536) and long (259968) depths.", "",
-         "| Run | Model | tg/req d65536 c1 | tg/req d65536 c4 | pp d65536 c1 | tg/req d259968 c1 | tg/req d259968 c4 | pp d259968 c1 | Tools score |",
-         "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
+         "Decode tok/s per request (tg/req) and prefill tok/s (pp) at each run's short (smallest) and long (largest) depth.",
+         "† context-load row only (measured requests failed); \\* some requests failed.", "",
+         "| Run | Model | Short depth | tg/req c1 | tg/req c4 | pp c1 | Long depth | tg/req c1 | tg/req c4 | pp c1 | Tools score |",
+         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
 
     def cell(s, d, c, f):
         for x in s.get("perf_grid") or []:
             if x["depth"] == d and x["concurrency"] == c:
-                return _f(x.get(f), 0 if f == "pp_tok_s" else 1) if x["ok"] else "FAIL"
+                return cell_text(x, f, 0 if f == "pp_tok_s" else 1)
         return "—"
 
     for s in sorted(summaries, key=lambda x: x.get("run_id", ""), reverse=True):
         rid = s.get("run_id", "")
-        L.append(f"| [{rid}](runs/{rid}/summary.md) | {s.get('model')} | {cell(s,65536,1,'tg_req_tok_s')} | {cell(s,65536,4,'tg_req_tok_s')} | "
-                 f"{cell(s,65536,1,'pp_tok_s')} | {cell(s,259968,1,'tg_req_tok_s')} | {cell(s,259968,4,'tg_req_tok_s')} | "
-                 f"{cell(s,259968,1,'pp_tok_s')} | {(s.get('tools') or {}).get('final_score', '—')} |")
+        depths = sorted({x["depth"] for x in s.get("perf_grid") or []}) or [None]
+        lo, hi = depths[0], depths[-1]
+        L.append(f"| [{rid}](runs/{rid}/summary.md) | {s.get('model')} | {lo} | {cell(s,lo,1,'tg_req_tok_s')} | {cell(s,lo,4,'tg_req_tok_s')} | "
+                 f"{cell(s,lo,1,'pp_tok_s')} | {hi} | {cell(s,hi,1,'tg_req_tok_s')} | {cell(s,hi,4,'tg_req_tok_s')} | "
+                 f"{cell(s,hi,1,'pp_tok_s')} | {(s.get('tools') or {}).get('final_score', '—')} |")
     return "\n".join(L) + "\n"
 
 

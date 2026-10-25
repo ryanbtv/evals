@@ -84,6 +84,36 @@ class TestPreflight(unittest.TestCase):
         self.assertEqual([x["name"] for x in got], ["vllm-stack", "rt", "envgpu"])
 
 
+class TestPartialCells(unittest.TestCase):
+    LOG = ("Running test: pp=2048, tg=128, depth=259968, concurrency=1\n"
+           "  Run 1/3 (Inference, batch size 1)...\n"
+           'HTTP 400: {"object":"error","message":"Requested token count exceeds the model\'s maximum context length of 262144 tokens. You requested a total of 262145 tokens"}\n'
+           'HTTP 400: {"object":"error","message":"again"}\n')
+
+    def test_context_only_cell_is_partial(self):
+        empty = {"context_size": 259968, "concurrency": 1, "is_context_prefill_phase": False, "pp_throughput": None,
+                 "tg_throughput": None, "tg_req_throughput": None, "ttfr": None}
+        res = {"benchmarks": [row(259968, 1, 15.8, ctx=True), empty]}
+        errs = {(259968, 1): lib.request_errors(self.LOG)}
+        cell = lib.perf_grid(res, [259968], [1], errs)[0]
+        self.assertEqual((cell["status"], cell["ctx_only"], cell["tg_tok_s"]), ("partial", True, 15.8))
+        self.assertEqual(cell["request_errors"]["count"], 2)
+        self.assertEqual(lib.cell_text(cell, "tg_tok_s", 1), "15.8†")
+        md = lib.render_summary({"perf_grid": [cell]})
+        self.assertIn("15.8†", md)
+        self.assertIn("262145 tokens", md)
+
+    def test_ok_cell_with_some_failed_requests(self):
+        res = {"benchmarks": [row(259968, 2, 18.9, 18.9)]}
+        cell = lib.perf_grid(res, [259968], [2], {(259968, 2): lib.request_errors(self.LOG)})[0]
+        self.assertEqual(cell["status"], "ok")
+        self.assertEqual(lib.cell_text(cell, "tg_tok_s", 1), "18.9*")
+        self.assertEqual(lib.cell_text(lib.perf_grid({}, [1], [1])[0], "tg_tok_s", 1), "FAIL")
+
+    def test_request_errors_none(self):
+        self.assertEqual(lib.request_errors("all good\n")["count"], 0)
+
+
 class TestSanitize(unittest.TestCase):
     def test_sanitize(self):
         s = lib.sanitize_text("path /home/ryanb/x host dgx01.ff.lan ip 192.168.1.5 10.0.0.1 pub 8.8.8.8 "

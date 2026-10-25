@@ -54,9 +54,11 @@ Each phase runs inside its own `sparkrun.api.capture_diagnostics` bundle
 next phase still runs.
 
 1. **performance** — llama-benchy 0.4.0 (pinned by sparkrun): pp 2048, tg 128,
-   two depths — **short** 65536 and **long** 259968 — at concurrency 1 / 2 / 4, 3 runs per
-   cell, prefix caching on. 259968 is the deepest context that fits the model's 262144
-   window with the request on top: 259968 + 2048 (pp) + 128 (tg) = 262144.
+   two depths — **short** 65536 and **long** 259840 — at concurrency 1 / 2 / 4, 3 runs per
+   cell, prefix caching on. 259840 + 2048 (pp) + 128 (tg) = 262016, which leaves 128
+   tokens of the model's 262144 window for chat-template and BOS tokens. The first run used
+   259968 (zero slack). The server counted 1–2 extra tokens and rejected every measured
+   request with HTTP 400.
    One sparkrun task per (depth, concurrency), each with a 14,400 s timeout;
    `exit_on_first_fail=False`, so a cell that times out or exhausts the KV cache is
    reported as `FAIL` and the sweep continues.
@@ -90,6 +92,11 @@ stopped through `sparkrun.api.stop` in a `finally` block, with a
   2048-token prompt on top of a cached context.
 - Values are means of the configured runs. `FAIL` means the cell produced no measurement
   (timeout, request error, KV exhaustion or server crash).
+  `†` means every measured request in the cell failed and the value comes from
+  llama-benchy's context-load row instead (prefill of the full depth, then decode on it).
+  `*` means some requests failed and the value averages only the successful ones.
+  Failed requests are counted from each task's llama-benchy log (`HTTP <status>:` lines)
+  and listed with their first error message in `summary.md`.
 - **Tool score** — tool-eval-bench `final_score` (0–100) plus its rating, deployability,
   responsiveness and points.
 

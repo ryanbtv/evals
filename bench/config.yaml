@@ -17,9 +17,10 @@ performance:
   bench_args:
     pp: [2048]
     tg: [128]
-    # short = 65536; long = 259968, the deepest context with depth + pp + tg <= 262144
-    # (259968 + 2048 + 128 = 262144, the recipe's model max length).
-    depth: [65536, 259968]
+    # short = 65536; long = 259840. 259840 + 2048 (pp) + 128 (tg) = 262016, leaving 128
+    # tokens under the 262144 window for chat-template/BOS tokens. 259968 (zero slack) was
+    # used on 2026-10-25 and every measured request failed with HTTP 400 "262145 tokens".
+    depth: [65536, 259840]
     concurrency: [1, 2, 4]
     runs: 3
     prefix_caching: true

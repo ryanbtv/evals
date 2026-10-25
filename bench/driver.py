@@ -7,6 +7,7 @@ import datetime as dt
 import json
 import os
 import platform as pyplatform
+import re
 import shutil
 import signal
 import subprocess
@@ -105,6 +106,7 @@ class Harness:
         (self.dir / "diagnostics").mkdir()
         self.phases: dict[str, dict] = {}
         self.results: dict = {}
+        self.state_dirs: dict = {}
         self.benchmark_id: str | None = None
         self.summary: dict = {}
         self.platform: dict = {}
@@ -175,7 +177,10 @@ class Harness:
             err = f"{type(e).__name__}: {e}"
             traceback.print_exc()
         finally:
-            self.recover(output, getattr(result, "state_dir", None))
+            sd = getattr(result, "state_dir", None) or (
+                str(Path.home() / ".cache" / "sparkrun" / "benchmarks" / self.benchmark_id) if self.benchmark_id else None)
+            self.state_dirs[output.stem] = sd
+            self.recover(output, sd)
         if result is not None:
             if getattr(result, "run_result", None) is not None:
                 self.launches += 1
@@ -283,11 +288,30 @@ class Harness:
     def summarize_perf(self, err):
         c = self.cfg["performance"]
         res = self.results_of(self.results.get("performance"), self.dir / "perf.yaml")
-        self.summary["perf_grid"] = lib.perf_grid(res, c["bench_args"]["depth"], c["bench_args"]["concurrency"])
-        failed = [f"d{x['depth']}c{x['concurrency']}" for x in self.summary["perf_grid"] if not x["ok"]]
-        if failed and not self.dry_run:
-            err = (err + "; " if err else "") + "failed cells: " + ",".join(failed)
+        errors = self.task_log_errors(self.dir / "perf.yaml")
+        self.summary["perf_grid"] = lib.perf_grid(res, c["bench_args"]["depth"], c["bench_args"]["concurrency"], errors)
+        notes = [f"d{x['depth']}c{x['concurrency']}:{x['status']}" for x in self.summary["perf_grid"] if x["status"] != "ok"]
+        notes += [f"d{x['depth']}c{x['concurrency']}:{x['request_errors']['count']} failed requests"
+                  for x in self.summary["perf_grid"] if x["status"] == "ok" and x.get("request_errors")]
+        if notes and not self.dry_run:
+            err = (err + "; " if err else "") + "cells: " + ", ".join(notes)
         return err
+
+    def task_log_errors(self, output: Path) -> dict:
+        """Copy the per-task logs/JSON into <stem>-tasks/ and count failed requests per (depth, conc)."""
+        out: dict = {}
+        sdir = self.state_dirs.get(output.stem)
+        tasks = self.dir / f"{output.stem}-tasks"
+        try:
+            if sdir and (Path(sdir) / "runs").is_dir():
+                shutil.copytree(Path(sdir) / "runs", tasks, dirs_exist_ok=True)
+            for log in sorted(tasks.glob("*.log")) if tasks.is_dir() else []:
+                m = re.search(r"_d(\d+)_c(\d+)\.log$", log.name)
+                if m:
+                    out[(int(m.group(1)), int(m.group(2)))] = lib.request_errors(log.read_text(errors="replace"))
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+        return out
 
     def run_tools(self):
         c = self.cfg["tools"]
