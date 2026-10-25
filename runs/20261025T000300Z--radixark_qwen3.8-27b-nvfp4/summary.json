@@ -1,0 +1,356 @@
+{
+  "run_id": "20261025T000300Z--radixark_qwen3.8-27b-nvfp4",
+  "model": "qwen3.8-27b",
+  "recipe_name": "RadixArk_Qwen3.8-27B-NVFP4.yml",
+  "smoke": false,
+  "dry_run": false,
+  "phases": {
+    "performance": {
+      "status": "interrupted",
+      "started_at": "2026-10-25T00:03:00+00:00",
+      "error": "stopped at 11h poll cap during task 30 (d258048 c4); d131072c8, d196608c4, d196608c8 timed out at 5400s; d258048 c4/c8 not run",
+      "duration_s": 39085.6,
+      "ended_at": "2026-10-25T10:54:26+00:00"
+    },
+    "tools": {
+      "status": "not run",
+      "error": "run stopped at poll cap before this phase"
+    },
+    "ctf": {
+      "status": "not run",
+      "error": "run stopped at poll cap before this phase"
+    }
+  },
+  "container_image": "lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1 (from recipe; run interrupted before sparkrun reported provenance)",
+  "sparkrun_version": "0.4.1",
+  "harness_commit": "446509c3c6ae4115877d8dc4f070a9d1500b6337",
+  "server_reuse": {
+    "launches": 0,
+    "skip_run_calls": 0,
+    "skip_run_ok": 0
+  },
+  "perf_grid": [
+    {
+      "depth": 0,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 2290.7765881930154,
+      "pp_req_tok_s": 2290.7765881930154,
+      "tg_tok_s": 26.736724183815742,
+      "tg_req_tok_s": 26.736724183815742,
+      "ttfr_ms": 898.7361183195995,
+      "e2e_ttft_ms": 898.7361183195995
+    },
+    {
+      "depth": 0,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 2184.0020842085473,
+      "pp_req_tok_s": 1094.4724379174238,
+      "tg_tok_s": 50.282930839307575,
+      "tg_req_tok_s": 26.536652879260952,
+      "ttfr_ms": 1878.0135133420117,
+      "e2e_ttft_ms": 1878.0135133420117
+    },
+    {
+      "depth": 0,
+      "concurrency": 4,
+      "ok": true,
+      "pp_tok_s": 1934.5794953009681,
+      "pp_req_tok_s": 490.78568892122775,
+      "tg_tok_s": 77.48162762796787,
+      "tg_req_tok_s": 20.870361977078424,
+      "ttfr_ms": 4180.013893909442,
+      "e2e_ttft_ms": 4180.013893909442
+    },
+    {
+      "depth": 0,
+      "concurrency": 8,
+      "ok": true,
+      "pp_tok_s": 1187.1210679728385,
+      "pp_req_tok_s": 321.16975801417277,
+      "tg_tok_s": 68.13434587648479,
+      "tg_req_tok_s": 17.750694203769243,
+      "ttfr_ms": 7902.307888623909,
+      "e2e_ttft_ms": 7902.307888623909
+    },
+    {
+      "depth": 4096,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 688.4526092698679,
+      "pp_req_tok_s": 688.4526092698679,
+      "tg_tok_s": 27.679466783746978,
+      "tg_req_tok_s": 27.679466783746978,
+      "ttfr_ms": 2979.4988069916144,
+      "e2e_ttft_ms": 2979.4988069916144
+    },
+    {
+      "depth": 4096,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 943.9351235147133,
+      "pp_req_tok_s": 473.8202119042449,
+      "tg_tok_s": 44.70728684590538,
+      "tg_req_tok_s": 23.923825975974946,
+      "ttfr_ms": 4326.7577739898115,
+      "e2e_ttft_ms": 4326.7577739898115
+    },
+    {
+      "depth": 4096,
+      "concurrency": 4,
+      "ok": true,
+      "pp_tok_s": 956.0689029169556,
+      "pp_req_tok_s": 268.60979068043036,
+      "tg_tok_s": 54.33888091906429,
+      "tg_req_tok_s": 18.956278386466526,
+      "ttfr_ms": 8010.529856740808,
+      "e2e_ttft_ms": 8010.529856740808
+    },
+    {
+      "depth": 4096,
+      "concurrency": 8,
+      "ok": true,
+      "pp_tok_s": 644.6967938619867,
+      "pp_req_tok_s": 165.5884081148636,
+      "tg_tok_s": 42.70372261779958,
+      "tg_req_tok_s": 13.911893962465774,
+      "ttfr_ms": 14959.332787371144,
+      "e2e_ttft_ms": 14959.332787371144
+    },
+    {
+      "depth": 16384,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 354.87016662538457,
+      "pp_req_tok_s": 354.87016662538457,
+      "tg_tok_s": 26.563616556117292,
+      "tg_req_tok_s": 26.563616556117292,
+      "ttfr_ms": 5775.188891993214,
+      "e2e_ttft_ms": 5775.188891993214
+    },
+    {
+      "depth": 16384,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 353.5991827070798,
+      "pp_req_tok_s": 177.24274564163332,
+      "tg_tok_s": 42.86788496173568,
+      "tg_req_tok_s": 22.52624337608877,
+      "ttfr_ms": 11558.041910999842,
+      "e2e_ttft_ms": 11558.041910999842
+    },
+    {
+      "depth": 16384,
+      "concurrency": 4,
+      "ok": true,
+      "pp_tok_s": 401.84777319098004,
+      "pp_req_tok_s": 114.2343403799433,
+      "tg_tok_s": 37.894527210641115,
+      "tg_req_tok_s": 15.656140987316112,
+      "ttfr_ms": 18455.18793465938,
+      "e2e_ttft_ms": 18455.18793465938
+    },
+    {
+      "depth": 16384,
+      "concurrency": 8,
+      "ok": true,
+      "pp_tok_s": 278.37157241296853,
+      "pp_req_tok_s": 117.57076754074505,
+      "tg_tok_s": 16.956470692654644,
+      "tg_req_tok_s": 8.88703931277101,
+      "ttfr_ms": 29404.844060625084,
+      "e2e_ttft_ms": 29404.844060625084
+    },
+    {
+      "depth": 32768,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 287.6888947419299,
+      "pp_req_tok_s": 287.6888947419299,
+      "tg_tok_s": 25.138273979807224,
+      "tg_req_tok_s": 25.138273979807224,
+      "ttfr_ms": 7123.256448986164,
+      "e2e_ttft_ms": 7123.256448986164
+    },
+    {
+      "depth": 32768,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 287.4322523952032,
+      "pp_req_tok_s": 144.03225537642123,
+      "tg_tok_s": 38.449817008605855,
+      "tg_req_tok_s": 19.79204720278512,
+      "ttfr_ms": 14222.99134398539,
+      "e2e_ttft_ms": 14222.99134398539
+    },
+    {
+      "depth": 32768,
+      "concurrency": 4,
+      "ok": true,
+      "pp_tok_s": 327.9266666669828,
+      "pp_req_tok_s": 92.91841924468434,
+      "tg_tok_s": 33.12643140828001,
+      "tg_req_tok_s": 14.6856155836031,
+      "ttfr_ms": 22676.05331076872,
+      "e2e_ttft_ms": 22676.05331076872
+    },
+    {
+      "depth": 32768,
+      "concurrency": 8,
+      "ok": true,
+      "pp_tok_s": 126.12735728460014,
+      "pp_req_tok_s": 67.19555243061102,
+      "tg_tok_s": 7.903905479330213,
+      "tg_req_tok_s": 5.653496759755672,
+      "ttfr_ms": 65970.11683608434,
+      "e2e_ttft_ms": 65970.11683608434
+    },
+    {
+      "depth": 65536,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 206.4749701266397,
+      "pp_req_tok_s": 206.4749701266397,
+      "tg_tok_s": 22.405968353869227,
+      "tg_req_tok_s": 22.405968353869227,
+      "ttfr_ms": 9921.645618664721,
+      "e2e_ttft_ms": 9921.645618664721
+    },
+    {
+      "depth": 65536,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 208.2935689768292,
+      "pp_req_tok_s": 104.3327885943536,
+      "tg_tok_s": 39.56849023660707,
+      "tg_req_tok_s": 20.541004200679815,
+      "ttfr_ms": 19634.010438836413,
+      "e2e_ttft_ms": 19634.010438836413
+    },
+    {
+      "depth": 65536,
+      "concurrency": 4,
+      "ok": true,
+      "pp_tok_s": 111.08637351747761,
+      "pp_req_tok_s": 62.69089551305378,
+      "tg_tok_s": 8.395821049018792,
+      "tg_req_tok_s": 6.300597465808933,
+      "ttfr_ms": 41909.99476666426,
+      "e2e_ttft_ms": 41909.99476666426
+    },
+    {
+      "depth": 65536,
+      "concurrency": 8,
+      "ok": true,
+      "pp_tok_s": 47.24837112916165,
+      "pp_req_tok_s": 15.724930783228288,
+      "tg_tok_s": 3.428799414183473,
+      "tg_req_tok_s": 3.426100921206759,
+      "ttfr_ms": 188492.065883455,
+      "e2e_ttft_ms": 188492.065883455
+    },
+    {
+      "depth": 131072,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 134.73105478035322,
+      "pp_req_tok_s": 134.73105478035322,
+      "tg_tok_s": 19.921796050289444,
+      "tg_req_tok_s": 19.921796050289444,
+      "ttfr_ms": 15205.236448343689,
+      "e2e_ttft_ms": 15205.236448343689
+    },
+    {
+      "depth": 131072,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 136.55556166970584,
+      "pp_req_tok_s": 68.37088835436121,
+      "tg_tok_s": 26.000283726944968,
+      "tg_req_tok_s": 14.825936097742348,
+      "ttfr_ms": 29958.37727666367,
+      "e2e_ttft_ms": 29958.37727666367
+    },
+    {
+      "depth": 131072,
+      "concurrency": 4,
+      "ok": true,
+      "pp_tok_s": 19.98302214820919,
+      "pp_req_tok_s": 9.741354535750443,
+      "tg_tok_s": 1.8317402233583102,
+      "tg_req_tok_s": 8.996983469459256,
+      "ttfr_ms": 252016.5844420068,
+      "e2e_ttft_ms": 252016.5844420068
+    },
+    {
+      "depth": 131072,
+      "concurrency": 8,
+      "ok": false
+    },
+    {
+      "depth": 196608,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 100.23100035437449,
+      "pp_req_tok_s": 100.23100035437449,
+      "tg_tok_s": 19.259439923174998,
+      "tg_req_tok_s": 19.259439923174998,
+      "ttfr_ms": 20436.419711991522,
+      "e2e_ttft_ms": 20436.419711991522
+    },
+    {
+      "depth": 196608,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 15.566706064316428,
+      "pp_req_tok_s": 18.613597886438516,
+      "tg_tok_s": 16.32750028847904,
+      "tg_req_tok_s": 10.846463727860074,
+      "ttfr_ms": 223906.79357217354,
+      "e2e_ttft_ms": 223906.79357217354
+    },
+    {
+      "depth": 196608,
+      "concurrency": 4,
+      "ok": false
+    },
+    {
+      "depth": 196608,
+      "concurrency": 8,
+      "ok": false
+    },
+    {
+      "depth": 258048,
+      "concurrency": 1,
+      "ok": true,
+      "pp_tok_s": 129.88464212569826,
+      "pp_req_tok_s": 129.88464212569826,
+      "tg_tok_s": 16.761831846131763,
+      "tg_req_tok_s": 16.761831846131763,
+      "ttfr_ms": 15771.39612401758,
+      "e2e_ttft_ms": 15771.39612401758
+    },
+    {
+      "depth": 258048,
+      "concurrency": 2,
+      "ok": true,
+      "pp_tok_s": 8.615284594335053,
+      "pp_req_tok_s": 46.313127826005626,
+      "tg_tok_s": 0.6463881501882914,
+      "tg_req_tok_s": 16.50969769224669,
+      "ttfr_ms": 328965.72482417105,
+      "e2e_ttft_ms": 328965.72482417105
+    },
+    {
+      "depth": 258048,
+      "concurrency": 4,
+      "ok": false
+    },
+    {
+      "depth": 258048,
+      "concurrency": 8,
+      "ok": false
+    }
+  ]
+}

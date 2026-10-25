@@ -1,0 +1,134 @@
+[2026-10-25T00:03:00+00:00] [setup] run 20261025T000300Z--radixark_qwen3.8-27b-nvfp4 recipe=~/recipes/RadixArk_Qwen3.8-27B-NVFP4.yml smoke=False dry_run=False
+[2026-10-25T00:03:00+00:00] [preflight] nothing to stop
+[2026-10-25T00:03:00+00:00] [performance] benchmark llama-benchy skip_run=False args={"pp": [2048], "tg": [128], "depth": [0, 4096, 16384, 32768, 65536, 131072, 196608, 258048], "concurrency": [1, 2, 4, 8], "runs": 3, "prefix_caching": true}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[2026-10-25T00:03:01+00:00] [performance] banner: ============================================================
+[2026-10-25T00:03:01+00:00] [performance] banner: sparkrun v0.4.1 — benchmark
+[2026-10-25T00:03:01+00:00] [performance] banner: ============================================================
+[2026-10-25T00:03:01+00:00] [performance] banner: Recipe:                ~/recipes/RadixArk_Qwen3.8-27B-NVFP4.yml
+[2026-10-25T00:03:01+00:00] [performance] banner: Model:                 RadixArk/Qwen3.8-27B-NVFP4
+[2026-10-25T00:03:01+00:00] [performance] banner: Served as:             qwen3.8-27b
+[2026-10-25T00:03:01+00:00] [performance] banner: Runtime:               sglang
+[2026-10-25T00:03:01+00:00] [performance] banner: Declared image:        lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
+[2026-10-25T00:03:01+00:00] [performance] banner: Benchmark Framework:   llama-benchy
+[2026-10-25T00:03:01+00:00] [performance] banner: Hosts:                 localhost
+[2026-10-25T00:03:01+00:00] [performance] banner: Mode:                  solo
+[2026-10-25T00:03:01+00:00] [performance] banner: 
+[2026-10-25T00:03:01+00:00] [performance] banner: Benchmark args:
+[2026-10-25T00:03:01+00:00] [performance] banner:   pp:                                 [2048]
+[2026-10-25T00:03:01+00:00] [performance] banner:   depth:                              [0, 4096, 16384, 32768, 65536, 131072, 196608, 258048]
+[2026-10-25T00:03:01+00:00] [performance] banner:   prefix_caching:                     True
+[2026-10-25T00:03:01+00:00] [performance] banner:   tg:                                 [128]
+[2026-10-25T00:03:01+00:00] [performance] banner:   concurrency:                        [1, 2, 4, 8]
+[2026-10-25T00:03:01+00:00] [performance] banner:   runs:                               3
+[2026-10-25T00:03:01+00:00] [performance] banner:   served_model_name:                  qwen3.8-27b
+[2026-10-25T00:03:01+00:00] [performance] banner:   extra_body:                         return_token_ids=false
+[2026-10-25T00:03:01+00:00] [performance] banner: ============================================================
+[2026-10-25T00:03:01+00:00] [performance] banner: 
+[2026-10-25T00:03:01+00:00] [performance] info: Benchmark ID:          bench_df6d8095daeb
+[2026-10-25T00:03:01+00:00] [performance] info: State directory:       ~/.cache/sparkrun/benchmarks/bench_df6d8095daeb
+[2026-10-25T00:03:01+00:00] [performance] info: 
+[2026-10-25T00:03:02+00:00] [performance] info: Pinned llama-benchy version: 0.4.0
+[2026-10-25T00:03:16+00:00] [performance] info: 
+[2026-10-25T00:03:16+00:00] [performance] info: Pinned image SHA: sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
+[2026-10-25T00:10:32+00:00] [performance] info: 
+[2026-10-25T00:10:32+00:00] [performance] schedule_started: RadixArk_Qwen3.8-27B-NVFP4
+[2026-10-25T00:10:32+00:00] [performance] task 0 start: d=0 c=1
+[2026-10-25T00:11:00+00:00] [performance] task 0 end: success=True 27.72847454698058s
+[2026-10-25T00:11:00+00:00] [performance] task 1 start: d=0 c=2
+[2026-10-25T00:11:22+00:00] [performance] task 1 end: success=True 22.24987850803882s
+[2026-10-25T00:11:22+00:00] [performance] task 2 start: d=0 c=4
+[2026-10-25T00:11:55+00:00] [performance] task 2 end: success=True 33.4923223729711s
+[2026-10-25T00:11:55+00:00] [performance] task 3 start: d=0 c=8
+[2026-10-25T00:12:56+00:00] [performance] task 3 end: success=True 60.71065713802818s
+[2026-10-25T00:12:56+00:00] [performance] task 4 start: d=4096 c=1
+[2026-10-25T00:13:42+00:00] [performance] task 4 end: success=True 45.75137579999864s
+[2026-10-25T00:13:42+00:00] [performance] task 5 start: d=4096 c=2
+[2026-10-25T00:14:43+00:00] [performance] task 5 end: success=True 61.237192672037054s
+[2026-10-25T00:14:43+00:00] [performance] task 6 start: d=4096 c=4
+[2026-10-25T00:16:17+00:00] [performance] task 6 end: success=True 93.6247455450357s
+[2026-10-25T00:16:17+00:00] [performance] task 7 start: d=4096 c=8
+[2026-10-25T00:19:20+00:00] [performance] task 7 end: success=True 183.3965781769948s
+[2026-10-25T00:19:20+00:00] [performance] task 8 start: d=16384 c=1
+[2026-10-25T00:20:38+00:00] [performance] task 8 end: success=True 78.09699652297422s
+[2026-10-25T00:20:38+00:00] [performance] task 9 start: d=16384 c=2
+[2026-10-25T00:22:44+00:00] [performance] task 9 end: success=True 125.93820416199742s
+[2026-10-25T00:22:44+00:00] [performance] task 10 start: d=16384 c=4
+[2026-10-25T00:26:18+00:00] [performance] task 10 end: success=True 213.6606042740168s
+[2026-10-25T00:26:18+00:00] [performance] task 11 start: d=16384 c=8
+[2026-10-25T00:33:53+00:00] [performance] task 11 end: success=True 454.9108259229688s
+[2026-10-25T00:33:53+00:00] [performance] task 12 start: d=32768 c=1
+[2026-10-25T00:35:47+00:00] [performance] task 12 end: success=True 113.86581246898277s
+[2026-10-25T00:35:47+00:00] [performance] task 13 start: d=32768 c=2
+[2026-10-25T00:39:10+00:00] [performance] task 13 end: success=True 203.1006033750018s
+[2026-10-25T00:39:10+00:00] [performance] task 14 start: d=32768 c=4
+[2026-10-25T00:45:13+00:00] [performance] task 14 end: success=True 362.87073450896423s
+[2026-10-25T00:45:13+00:00] [performance] task 15 start: d=32768 c=8
+[2026-10-25T01:00:52+00:00] [performance] task 15 end: success=True 939.0792330660042s
+[2026-10-25T01:00:52+00:00] [performance] task 16 start: d=65536 c=1
+[2026-10-25T01:04:23+00:00] [performance] task 16 end: success=True 211.1139101650333s
+[2026-10-25T01:04:23+00:00] [performance] task 17 start: d=65536 c=2
+[2026-10-25T01:10:49+00:00] [performance] task 17 end: success=True 385.48292515199864s
+[2026-10-25T01:10:49+00:00] [performance] task 18 start: d=65536 c=4
+[2026-10-25T01:24:56+00:00] [performance] task 18 end: success=True 847.6392358859885s
+[2026-10-25T01:24:56+00:00] [performance] task 19 start: d=65536 c=8
+[2026-10-25T02:02:38+00:00] [performance] task 19 end: success=True 2261.582977915008s
+[2026-10-25T02:02:38+00:00] [performance] task 20 start: d=131072 c=1
+[2026-10-25T02:10:27+00:00] [performance] task 20 end: success=True 469.4422457520268s
+[2026-10-25T02:10:27+00:00] [performance] task 21 start: d=131072 c=2
+[2026-10-25T02:25:38+00:00] [performance] task 21 end: success=True 910.2955759359756s
+[2026-10-25T02:25:38+00:00] [performance] task 22 start: d=131072 c=4
+[2026-10-25T03:12:45+00:00] [performance] task 22 end: success=True 2827.464057930978s
+[2026-10-25T03:12:45+00:00] [performance] task 23 start: d=131072 c=8
+[2026-10-25T04:42:45+00:00] [performance] task 23 end: success=False 5400.004064579029s
+[2026-10-25T04:42:45+00:00] [performance] task 24 start: d=196608 c=1
+[2026-10-25T04:56:40+00:00] [performance] task 24 end: success=True 834.3554504740168s
+[2026-10-25T04:56:40+00:00] [performance] task 25 start: d=196608 c=2
+[2026-10-25T05:34:45+00:00] [performance] task 25 end: success=True 2285.5706026179832s
+[2026-10-25T05:34:45+00:00] [performance] task 26 start: d=196608 c=4
+[2026-10-25T07:04:45+00:00] [performance] task 26 end: success=False 5400.004332315992s
+[2026-10-25T07:04:45+00:00] [performance] task 27 start: d=196608 c=8
+[2026-10-25T08:34:45+00:00] [performance] task 27 end: success=False 5400.0084279390285s
+[2026-10-25T08:34:45+00:00] [performance] task 28 start: d=258048 c=1
+[2026-10-25T08:55:06+00:00] [performance] task 28 end: success=True 1220.2523028089781s
+[2026-10-25T08:55:06+00:00] [performance] task 29 start: d=258048 c=2
+[2026-10-25T09:59:46+00:00] [performance] task 29 end: success=True 3880.1296872409876s
+[2026-10-25T09:59:46+00:00] [performance] task 30 start: d=258048 c=4
+[2026-10-25T10:54:25+00:00] [performance] schedule_finished: 
+Traceback (most recent call last):
+  File "~/evals/bench/driver.py", line 214, in phase
+    err = fn()
+  File "~/evals/bench/driver.py", line 232, in run_perf
+    result, err = self.bench(category="performance", framework=c["framework"], bench_args=c["bench_args"], output=out, timeout=c["timeout_s"])
+                  ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "~/evals/bench/driver.py", line 165, in bench
+    result = benchmark(opts, sctx=self.sctx)
+  File "~/.local/share/uv/tools/sparkrun/lib/python3.14/site-packages/sparkrun/diagnostics/session.py", line 327, in wrapped
+    result = function(*bound.args, **bound.kwargs)
+  File "~/.local/share/uv/tools/sparkrun/lib/python3.14/site-packages/sparkrun/core/coordination.py", line 177, in invoke
+    return function(*bound.args, **bound.kwargs)
+  File "~/.local/share/uv/tools/sparkrun/lib/python3.14/site-packages/sparkrun/api/_benchmark.py", line 2139, in benchmark
+    bench_result = _execute_benchmark(effective_options, sctx=sctx, emitter=emitter)
+  File "~/.local/share/uv/tools/sparkrun/lib/python3.14/site-packages/sparkrun/api/_benchmark.py", line 1298, in _execute_benchmark
+    sched_result = run_schedule(
+        fw=fw,
+    ...<8 lines>...
+        credentials=credentials,
+    )
+  File "~/.local/share/uv/tools/sparkrun/lib/python3.14/site-packages/sparkrun/benchmarking/scheduler.py", line 310, in run_schedule
+    aborted, interrupted = _do_loop()
+                           ~~~~~~~~^^
+  File "~/.local/share/uv/tools/sparkrun/lib/python3.14/site-packages/sparkrun/benchmarking/scheduler.py", line 263, in _do_loop
+    rc = run_benchmark_process(cmd, timeout=timeout, credentials=credentials, stdout=output, **streams)
+  File "~/.local/share/uv/tools/sparkrun/lib/python3.14/site-packages/sparkrun/benchmarking/_process.py", line 97, in run_benchmark_process
+    time.sleep(min(remaining, 0.01) if remaining is not None else 0.01)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "~/evals/bench/driver.py", line 424, in <lambda>
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
+                                             ~~~~~~~~^^^^^
+SystemExit: 143
+[2026-10-25T10:54:26+00:00] [performance] phase performance: crashed in 39085.6s SystemExit: 143
+[2026-10-25T10:54:26+00:00] [teardown] stopping inference via sparkrun.api.stop({'recipe': '~/recipes/RadixArk_Qwen3.8-27B-NVFP4.yml', 'cluster': None})
+[2026-10-25T10:54:28+00:00] [teardown] stop result: StopResult(workload_id='sparkrun_1a565e149fce1c82_8d078bee450f', hosts_targeted=('localhost',), containers_removed=1, errors=(), hosts_failed=(), dry_run=False)
+[2026-10-25T10:54:28+00:00] [teardown] published sanitized copy to ~/evals/runs/20261025T000300Z--radixark_qwen3.8-27b-nvfp4 (skipped binaries: [])
+[2026-10-25T10:54:28+00:00] [teardown] done
