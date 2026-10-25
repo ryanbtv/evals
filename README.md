@@ -44,6 +44,37 @@ A **preflight** first frees the GPU: it stops the `preflight.systemd_units` from
 `preflight.keep_containers`. Everything stopped is listed in `platform.json → preflight`
 and in `harness.log`. Nothing is restarted afterwards. The driver then refuses to start
 if something still answers on the recipe's port.
+
+**sparkrun proxy.** `sparkrun-proxy.service` (the LiteLLM gateway that Caddy fronts) holds
+sparkrun's host reservation while it runs, and every benchmark call would then fail with
+`ResourceBusy`. The preflight stops it (`sudo -n systemctl stop`) if it is active. A
+`finally` block starts it again on any exit, including SIGTERM and SIGINT, but only if the
+harness stopped it. The stop and start times are written to `platform.json → proxy` and
+`harness.log`. Endpoints behind the proxy are down for the length of a run; this is
+expected.
+
+## Repair: re-running one performance depth
+
+This is a maintenance tool, not normal use. It exists to replace invalid cells in an
+existing run, for example the 2026-10-25 run whose 259968 depth exceeded the context
+window:
+
+```sh
+./bench/run --rerun-perf-depth 259840 --merge-into raw-runs/<run-id> /path/to/recipe.yml
+```
+
+It runs only the performance phase at that one depth, with every other parameter from
+`bench/config.yaml`, and writes its own logs, diagnostics, progress and platform info to
+`raw-runs/<run-id>/rerun-<ts>/`. It then:
+
+1. moves the run's `perf.{json,yaml,csv}` to `superseded/perf-before-rerun-<ts>.*`,
+2. moves the replaced depths' task files to `superseded/perf-tasks/`
+   (by default every original depth ≥ the re-run depth; override with `--replaces-depth`),
+3. writes a merged `perf.json`, adds a note to the summary and `superseded/README.md`,
+   and republishes the sanitized run and `leaderboard.md`.
+
+If the re-run produces no measured rows, the parent run is left unchanged.
+`bench/resummarize.py <raw-run-dir>` rebuilds any run's summary from its raw files.
 From a workstation: `DGX_HOST=user@host scripts/sync.sh deploy`, then
 `scripts/sync.sh pull` to fetch `runs/` and `leaderboard.md` for committing.
 

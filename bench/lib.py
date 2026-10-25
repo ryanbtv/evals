@@ -188,6 +188,8 @@ def render_summary(s: dict) -> str:
     L = [f"# {s.get('model', '?')} — {s.get('run_id', '')}", ""]
     if s.get("smoke"):
         L += ["> **SMOKE run** — harness validation only, not a benchmark result.", ""]
+    for n in s.get("notes") or []:
+        L += [f"> **Note:** {n}", ""]
     L += [f"- Recipe: `{s.get('recipe_name')}`", f"- Container: `{s.get('container_image') or '?'}`",
           f"- sparkrun: {s.get('sparkrun_version')}; harness commit: {s.get('harness_commit')}", ""]
     L += ["## Phases", "", "| Phase | Status | Duration (s) | Error |", "|---|---|---:|---|"]
@@ -316,6 +318,53 @@ def jdump(obj: Any) -> str:
 
 
 # ---------------------------------------------------------------- preflight
+
+class ProxyGuard:
+    """Stop a systemd unit for the run and start it again on exit, only if we stopped it.
+
+    `run(argv) -> str` runs a command and returns its output; `clock() -> str` gives a timestamp.
+    """
+
+    def __init__(self, unit: str, run, clock, log=print):
+        self.unit, self.run, self.clock, self.log = unit, run, clock, log
+        self.stopped = False
+        self.restored = False
+        self.record: dict = {"unit": unit, "was_active": None, "stopped_at": None, "started_at": None,
+                             "stop_result": None, "start_result": None, "active_after_restart": None}
+
+    def active(self) -> bool:
+        return (self.run(["systemctl", "is-active", self.unit]) or "").strip() == "active"
+
+    def stop(self) -> None:
+        self.record["was_active"] = self.active()
+        if not self.record["was_active"]:
+            self.log(f"{self.unit} not active; leaving it alone")
+            return
+        self.record["stop_result"] = self.run(["sudo", "-n", "systemctl", "stop", self.unit]) or "ok"
+        self.record["stopped_at"] = self.clock()
+        self.stopped = not self.active()
+        self.log(f"stopped {self.unit} at {self.record['stopped_at']}: {self.record['stop_result']} (inactive={self.stopped})")
+
+    def restore(self) -> None:
+        if not self.record["was_active"] or self.restored:
+            return
+        self.restored = True
+        self.record["start_result"] = self.run(["sudo", "-n", "systemctl", "start", self.unit]) or "ok"
+        self.record["started_at"] = self.clock()
+        self.record["active_after_restart"] = self.active()
+        self.log(f"started {self.unit} at {self.record['started_at']}: {self.record['start_result']} (active={self.record['active_after_restart']})")
+
+
+def merge_perf(orig: dict | None, new: dict | None, replaced_depths) -> dict:
+    """Original llama-benchy rows minus the replaced depths, plus the re-run rows."""
+    replaced = {int(d) for d in replaced_depths}
+    keep = [b for b in (orig or {}).get("benchmarks") or [] if int(b.get("context_size") or 0) not in replaced]
+    add = list((new or {}).get("benchmarks") or [])
+    rows = keep + add
+    return {"model": (orig or {}).get("model") or (new or {}).get("model", ""),
+            "max_concurrency": max([int(b.get("concurrency") or 0) for b in rows] or [0]),
+            "benchmarks": rows, "merged": {"replaced_depths": sorted(replaced), "kept_rows": len(keep), "rerun_rows": len(add)}}
+
 
 def gpu_containers_to_stop(inspected: list[dict], keep: list[str]) -> list[dict]:
     """Pick running containers that hold the GPU, from `docker inspect` objects.

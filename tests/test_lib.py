@@ -114,6 +114,57 @@ class TestPartialCells(unittest.TestCase):
         self.assertEqual(lib.request_errors("all good\n")["count"], 0)
 
 
+class TestProxyGuard(unittest.TestCase):
+    def fake(self, active):
+        state = {"active": active, "calls": []}
+
+        def run(argv):
+            state["calls"].append(argv[-2] if argv[0] == "sudo" else "is-active")
+            if argv[0] == "sudo":
+                state["active"] = argv[-2] == "start"
+                return ""
+            return "active" if state["active"] else "inactive"
+        ticks = iter(["t1", "t2", "t3"])
+        return state, lib.ProxyGuard("sparkrun-proxy.service", run, lambda: next(ticks), log=lambda *_: None)
+
+    def test_stops_and_restores_once(self):
+        state, g = self.fake(True)
+        g.stop()
+        self.assertFalse(state["active"])
+        g.restore()
+        g.restore()
+        self.assertTrue(state["active"])
+        self.assertEqual(state["calls"].count("start"), 1)
+        self.assertEqual((g.record["stopped_at"], g.record["started_at"], g.record["active_after_restart"]), ("t1", "t2", True))
+
+    def test_inactive_unit_left_alone(self):
+        state, g = self.fake(False)
+        g.stop()
+        g.restore()
+        self.assertNotIn("stop", state["calls"])
+        self.assertNotIn("start", state["calls"])
+        self.assertIsNone(g.record["stopped_at"])
+
+    def test_restore_without_stop_is_noop(self):
+        state, g = self.fake(True)
+        g.restore()
+        self.assertEqual(state["calls"], [])
+
+
+class TestMerge(unittest.TestCase):
+    def test_merge_replaces_depth(self):
+        orig = {"model": "m", "benchmarks": [row(65536, 1, 24.0), row(259968, 1, 15.8, ctx=True), row(259968, 2, 18.9)]}
+        new = {"model": "m", "benchmarks": [row(259840, 1, 16.0, ctx=True), row(259840, 1, 16.5)]}
+        m = lib.merge_perf(orig, new, [259968])
+        self.assertEqual(sorted({b["context_size"] for b in m["benchmarks"]}), [65536, 259840])
+        self.assertEqual(m["merged"], {"replaced_depths": [259968], "kept_rows": 1, "rerun_rows": 2})
+        g = {(c["depth"], c["concurrency"]): c for c in lib.perf_grid(m, [65536, 259840], [1])}
+        self.assertEqual((g[(259840, 1)]["status"], g[(259840, 1)]["tg_tok_s"]), ("ok", 16.5))
+
+    def test_notes_rendered(self):
+        self.assertIn("> **Note:** merged", lib.render_summary({"notes": ["merged"]}))
+
+
 class TestSanitize(unittest.TestCase):
     def test_sanitize(self):
         s = lib.sanitize_text("path /home/ryanb/x host dgx01.ff.lan ip 192.168.1.5 10.0.0.1 pub 8.8.8.8 "

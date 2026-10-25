@@ -11,6 +11,9 @@ target:
 preflight:
   keep_containers: [caddy, bifrost, dockhand, dockhand-postgres]
   systemd_units: [dgx-model-stacks.service]   # stopped (sudo -n) if active; not restarted
+  # sparkrun's proxy holds sparkrun's host reservation while it runs, which makes every
+  # benchmark fail with ResourceBusy. Stopped if active, started again on every exit.
+  proxy_unit: sparkrun-proxy.service
 
 performance:
   framework: llama-benchy

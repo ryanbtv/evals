@@ -88,10 +88,14 @@ def platform_info() -> dict:
 
 
 class Harness:
-    def __init__(self, recipe: Path, dry_run: bool, smoke: bool):
+    def __init__(self, recipe: Path, dry_run: bool, smoke: bool, rerun_depth: int | None = None,
+                 merge_into: Path | None = None, replaces: list[int] | None = None):
         self.recipe = recipe
         self.dry_run = dry_run
         self.smoke = smoke
+        self.rerun_depth = rerun_depth
+        self.merge_into = merge_into
+        self.replaces = replaces
         raw = yaml.safe_load((REPO / "bench" / "config.yaml").read_text())
         self.cfg = lib.effective_config(raw, smoke)
         self.recipe_doc = yaml.safe_load(recipe.read_text()) or {}
@@ -99,11 +103,19 @@ class Harness:
         self.model = defaults.get("served_model_name") or str(self.recipe_doc.get("model", recipe.stem))
         self.port = int(defaults.get("port") or 8000)
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        suffix = "--dryrun" if dry_run else "--smoke" if smoke else ""
-        self.run_id = f"{stamp}--{lib.slugify(recipe.stem)}{suffix}"
-        self.dir = REPO / "raw-runs" / self.run_id
+        if rerun_depth is not None:
+            # Repair mode: one performance depth, results merged into an existing run.
+            self.cfg["performance"]["bench_args"]["depth"] = [int(rerun_depth)]
+            self.cfg["rerun"] = {"depth": int(rerun_depth), "merge_into": merge_into.name, "replaces": replaces}
+            self.run_id = f"{merge_into.name}/rerun-{stamp}{'--dryrun' if dry_run else ''}"
+            self.dir = merge_into / f"rerun-{stamp}{'--dryrun' if dry_run else ''}"
+        else:
+            suffix = "--dryrun" if dry_run else "--smoke" if smoke else ""
+            self.run_id = f"{stamp}--{lib.slugify(recipe.stem)}{suffix}"
+            self.dir = REPO / "raw-runs" / self.run_id
         self.dir.mkdir(parents=True)
         (self.dir / "diagnostics").mkdir()
+        self.proxy = None
         self.phases: dict[str, dict] = {}
         self.results: dict = {}
         self.state_dirs: dict = {}
@@ -384,6 +396,11 @@ class Harness:
         self.platform["preflight"] = rec
         if self.dry_run:
             return
+        unit = pf.get("proxy_unit")
+        if unit:
+            self.proxy = lib.ProxyGuard(unit, lambda argv: sh(argv, 300), now, self.log)
+            self.platform["proxy"] = self.proxy.record
+            self.proxy.stop()
         for unit in pf.get("systemd_units") or []:
             if sh(["systemctl", "is-active", unit], 15) == "active":
                 out = sh(["sudo", "-n", "systemctl", "stop", unit], 300)
@@ -430,26 +447,79 @@ class Harness:
         os.chdir(self.dir)
         from sparkrun.application import initialize
         self.sctx = initialize()
-        self.preflight()
-        self.write_summary()
-        if self.health():
-            self.log(f"ERROR: something already serves on port {self.port}; refusing to benchmark it")
-            return 2
         try:
+            self.preflight()
+            self.write_summary()
+            if self.health():
+                self.log(f"ERROR: something already serves on port {self.port}; refusing to benchmark it")
+                return 2
             self.phase("performance", self.run_perf, self.summarize_perf)
-            self.phase("tools", self.run_tools, self.summarize_tools)
+            if self.rerun_depth is None:
+                self.phase("tools", self.run_tools, self.summarize_tools)
         finally:
             self.stop_server()
+            self.current_phase = "teardown"
+            if self.proxy is not None:
+                try:
+                    self.proxy.restore()
+                except BaseException:  # noqa: BLE001
+                    traceback.print_exc()
             self.platform["framework_versions"].setdefault("llama-benchy", find_benchy_version(self.platform))
             if not self.platform["framework_versions"]["llama-benchy"]:
                 self.platform["framework_versions"]["llama-benchy"] = find_benchy_version(self.platform)
             self.write_summary()
             try:
-                self.publish()
+                if self.rerun_depth is not None:
+                    self.merge()
+                else:
+                    self.publish()
             except Exception:  # noqa: BLE001
                 traceback.print_exc()
             self.log("done")
         return 0
+
+    def merge(self) -> None:
+        """Repair mode: fold this re-run's depth into the parent run, superseding old depths."""
+        if self.dry_run:
+            self.log("dry-run: skipping merge")
+            return
+        import resummarize
+        parent, rerun = self.merge_into, self.dir.name
+        s = json.loads((parent / "summary.json").read_text())
+        ba = yaml.safe_load((parent / "config.yaml").read_text())["performance"]["bench_args"]
+        depths = s.get("perf_depths") or ba["depth"]
+        d = int(self.rerun_depth)
+        replaced = sorted(set(self.replaces) if self.replaces else {x for x in depths if x >= d})
+        new = json.loads((self.dir / "perf.json").read_text()) if (self.dir / "perf.json").exists() else {}
+        if not lib.benchy_rows(new):
+            self.log("re-run produced no measured rows; parent run left unchanged")
+            return
+        sup = parent / "superseded"
+        (sup / "perf-tasks").mkdir(parents=True, exist_ok=True)
+        old = json.loads((parent / "perf.json").read_text())
+        for ext in ("json", "yaml", "csv"):
+            f = parent / f"perf.{ext}"
+            if f.exists():
+                shutil.move(str(f), str(sup / f"perf-before-{rerun}.{ext}"))
+        for x in replaced:
+            for f in (parent / "perf-tasks").glob(f"*_d{x}_c*"):
+                shutil.move(str(f), str(sup / "perf-tasks" / f.name))
+        (parent / "perf.json").write_text(lib.jdump(lib.merge_perf(old, new, replaced)))
+        note = (f"Depth {d} was re-run on {now()} with `--rerun-perf-depth` ({rerun}/) and merged here. "
+                f"It replaces depth(s) {replaced}; their raw data is kept under superseded/.")
+        (sup / "README.md").write_text(f"# Superseded data\n\n{note}\n\n"
+                                       f"`perf-before-{rerun}.*` is the run's perf output before the merge; "
+                                       "`perf-tasks/` holds the replaced cells' task files.\n")
+        s["perf_depths"] = sorted((set(depths) - set(replaced)) | {d})
+        s.setdefault("notes", []).append(note)
+        ph = dict(self.phases.get("performance") or {})
+        s.setdefault("phases", {})[f"performance ({rerun}, depth {d})"] = ph
+        s.setdefault("reruns", []).append({"dir": rerun, "depth": d, "replaces": replaced, "harness_commit": self.platform.get("harness_commit"),
+                                           "phase": ph, "proxy": self.platform.get("proxy"), "container": self.platform.get("container")})
+        (parent / "summary.json").write_text(lib.jdump(s))
+        s = resummarize.rebuild(parent)
+        resummarize.publish(parent, s)
+        self.log(f"merged depth {d} into {parent.name}; replaced {replaced}; published")
 
 
 def find_benchy_version(platform: dict):
@@ -465,12 +535,24 @@ def find_benchy_version(platform: dict):
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description="Normal use: ./bench/run <recipe>. The --rerun-* options are a repair tool.")
     ap.add_argument("recipe")
     ap.add_argument("--dry-run", action="store_true", help="validate every phase with sparkrun dry_run=True")
+    ap.add_argument("--rerun-perf-depth", type=int, help="REPAIR: re-run only this performance depth (config pp/tg/runs/concurrency)")
+    ap.add_argument("--merge-into", help="REPAIR: raw run dir (raw-runs/<id> or runs/<id>) to merge the re-run into")
+    ap.add_argument("--replaces-depth", type=int, action="append", help="REPAIR: depth(s) the re-run supersedes (default: all >= the re-run depth)")
     a = ap.parse_args()
+    merge_into = None
+    if (a.rerun_perf_depth is None) != (a.merge_into is None):
+        ap.error("--rerun-perf-depth and --merge-into go together")
+    if a.merge_into:
+        merge_into = REPO / "raw-runs" / Path(a.merge_into).name
+        if not (merge_into / "summary.json").exists():
+            ap.error(f"no raw run at {merge_into}")
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
-    h = Harness(Path(a.recipe).resolve(), a.dry_run, os.environ.get("BENCH_SMOKE") == "1")
+    signal.signal(signal.SIGINT, lambda *_: sys.exit(130))
+    h = Harness(Path(a.recipe).resolve(), a.dry_run, os.environ.get("BENCH_SMOKE") == "1",
+                a.rerun_perf_depth, merge_into, a.replaces_depth)
     return h.main()
 
 
