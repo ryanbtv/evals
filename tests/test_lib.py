@@ -176,5 +176,16 @@ class TestSanitize(unittest.TestCase):
         self.assertIn("8.8.8.8", s)
 
 
+class TestDisplayModel(unittest.TestCase):
+    def test_prefers_recipe_model(self):
+        doc = {"model": "RadixArk/Qwen3.8-27B-NVFP4", "defaults": {"served_model_name": "qwen3.8-27b"}}
+        self.assertEqual(lib.display_model(doc, "stem"), "RadixArk/Qwen3.8-27B-NVFP4")
+
+    def test_fallbacks(self):
+        self.assertEqual(lib.display_model({"defaults": {"served_model_name": "q"}}, "stem"), "q")
+        self.assertEqual(lib.display_model({}, "stem"), "stem")
+        self.assertEqual(lib.display_model(None, "stem"), "stem")
+
+
 if __name__ == "__main__":
     unittest.main()

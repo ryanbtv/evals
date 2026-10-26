@@ -36,6 +36,12 @@ def slugify(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "-", text).strip("-").lower() or "model"
 
 
+def display_model(recipe_doc: dict | None, fallback: str = "") -> str:
+    """Reported model name: the recipe's `model` (HF repo id), else served_model_name, else fallback."""
+    doc = recipe_doc or {}
+    return str(doc.get("model") or (doc.get("defaults") or {}).get("served_model_name") or fallback)
+
+
 # ---------------------------------------------------------------- llama-benchy
 
 def metric_mean(value: Any) -> float | None:

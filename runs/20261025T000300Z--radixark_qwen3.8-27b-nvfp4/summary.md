@@ -1,4 +1,4 @@
-# qwen3.8-27b — 20261025T000300Z--radixark_qwen3.8-27b-nvfp4
+# RadixArk/Qwen3.8-27B-NVFP4 — 20261025T000300Z--radixark_qwen3.8-27b-nvfp4
 
 - Recipe: `RadixArk_Qwen3.8-27B-NVFP4.yml`
 - Container: `lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1 (from recipe; run interrupted before sparkrun reported provenance)`
