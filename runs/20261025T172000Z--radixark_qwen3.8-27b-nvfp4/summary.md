@@ -1,4 +1,4 @@
-# qwen3.8-27b — 20261025T172000Z--radixark_qwen3.8-27b-nvfp4
+# RadixArk/Qwen3.8-27B-NVFP4 — 20261025T172000Z--radixark_qwen3.8-27b-nvfp4
 
 > **Note:** Depth 259840 was re-run on 2026-10-26T02:27:07+00:00 with `--rerun-perf-depth` (rerun-20261025T221614Z/) and merged here. It replaces depth(s) [259968]; their raw data is kept under superseded/.
 

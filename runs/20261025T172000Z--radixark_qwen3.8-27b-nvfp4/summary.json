@@ -1,6 +1,6 @@
 {
   "run_id": "20261025T172000Z--radixark_qwen3.8-27b-nvfp4",
-  "model": "qwen3.8-27b",
+  "model": "RadixArk/Qwen3.8-27B-NVFP4",
   "recipe_name": "RadixArk_Qwen3.8-27B-NVFP4.yml",
   "smoke": false,
   "dry_run": false,
@@ -267,5 +267,6 @@
         ]
       }
     }
-  ]
+  ],
+  "served_model_name": "qwen3.8-27b"
 }

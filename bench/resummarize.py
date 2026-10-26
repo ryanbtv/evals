@@ -1,6 +1,7 @@
 """Rebuild a run's summary from its raw files with the current parsing logic.
 
 Usage: resummarize.py <raw-run-dir> [<sparkrun-state-dir>]
+       resummarize.py --relabel-published [<runs-dir>]   # refresh model names + leaderboard only
 Copies <state-dir>/runs into perf-tasks/ when given, then rewrites summary.json/md,
 republishes the sanitized copy to runs/ and regenerates leaderboard.md.
 Request errors come from perf-tasks/*.log and, after a depth re-run, rerun-*/perf-tasks/*.log.
@@ -20,6 +21,27 @@ import lib  # noqa: E402
 REPO = Path(__file__).resolve().parent.parent
 
 
+def relabel(run_dir: Path, s: dict) -> None:
+    """Set the reported model name from the run's saved recipe.yml (older runs used served_model_name)."""
+    recipe = run_dir / "recipe.yml"
+    if recipe.exists():
+        doc = yaml.safe_load(recipe.read_text()) or {}
+        if s.get("model") and s.get("model") != lib.display_model(doc, s["model"]):
+            s.setdefault("served_model_name", s["model"])
+        s["model"] = lib.display_model(doc, s.get("model", ""))
+
+
+def relabel_published(runs_root: Path) -> None:
+    """Relabel already-published runs in place (no raw files needed) and regenerate leaderboard.md."""
+    for sj in sorted(runs_root.glob("*/summary.json")):
+        s = json.loads(sj.read_text())
+        relabel(sj.parent, s)
+        sj.write_text(lib.jdump(s))
+        (sj.parent / "summary.md").write_text(lib.render_summary(s))
+    sums = [json.loads(p.read_text()) for p in sorted(runs_root.glob("*/summary.json"))]
+    (runs_root.parent / "leaderboard.md").write_text(lib.leaderboard(sums))
+
+
 def task_errors(run_dir: Path) -> dict:
     errs = {}
     logs = list((run_dir / "perf-tasks").glob("*.log")) + list(run_dir.glob("rerun-*/perf-tasks/*.log"))
@@ -32,6 +54,7 @@ def task_errors(run_dir: Path) -> dict:
 
 def rebuild(run_dir: Path) -> dict:
     s = json.loads((run_dir / "summary.json").read_text())
+    relabel(run_dir, s)
     ba = yaml.safe_load((run_dir / "config.yaml").read_text())["performance"]["bench_args"]
     depths = s.get("perf_depths") or ba["depth"]
     concs = s.get("perf_concurrency") or ba["concurrency"]
@@ -73,4 +96,7 @@ def main(run_dir: Path, state_dir: Path | None) -> None:
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else None)
+    if sys.argv[1:2] == ["--relabel-published"]:
+        relabel_published(Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else REPO / "runs")
+    else:
+        main(Path(sys.argv[1]).resolve(), Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else None)

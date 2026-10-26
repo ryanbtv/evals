@@ -100,7 +100,8 @@ class Harness:
         self.cfg = lib.effective_config(raw, smoke)
         self.recipe_doc = yaml.safe_load(recipe.read_text()) or {}
         defaults = self.recipe_doc.get("defaults") or {}
-        self.model = defaults.get("served_model_name") or str(self.recipe_doc.get("model", recipe.stem))
+        self.model = lib.display_model(self.recipe_doc, recipe.stem)
+        self.served_model_name = defaults.get("served_model_name")
         self.port = int(defaults.get("port") or 8000)
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         if rerun_depth is not None:
@@ -341,7 +342,7 @@ class Harness:
     # ------------------------------------------------------------ outputs
     def write_summary(self) -> None:
         self.summary.update({
-            "run_id": self.run_id, "model": self.model, "recipe_name": self.recipe.name,
+            "run_id": self.run_id, "model": self.model, "served_model_name": self.served_model_name, "recipe_name": self.recipe.name,
             "smoke": self.smoke, "dry_run": self.dry_run, "phases": self.phases,
             "container_image": (self.platform.get("container") or {}).get("container_image"),
             "sparkrun_version": self.platform.get("sparkrun_version"), "harness_commit": self.platform.get("harness_commit"),
