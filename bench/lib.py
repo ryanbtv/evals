@@ -314,7 +314,7 @@ _TOKENS = [
 _BEARER = re.compile(r"(?i)\b(bearer)\s+[A-Za-z0-9._~+/=-]{8,}")
 _KV_SECRET = re.compile(
     r"(?i)([\"']?\b[\w-]*(?:api[_-]?key|token|secret|password|passwd|authorization)[\w-]*[\"']?\s*[:=]\s*[\"']?)"
-    r"(?!<redacted>)([^\s\"',}]{6,})")
+    r"(?!<redacted>)(?![\d.,]+(?:[\s\"',}\]]|$))([^\s\"',}]{6,})")
 
 
 def sanitize_text(text: str) -> str:
