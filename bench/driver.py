@@ -87,6 +87,62 @@ def platform_info() -> dict:
     }
 
 
+class ResourceSampler:
+    """Background sampler of host memory, GPU and the model container. Never raises into the run."""
+
+    def __init__(self, path: Path, interval_s: float, phase_fn, health_fn):
+        import threading
+        self.path, self.interval, self.phase_fn, self.health_fn = path, interval_s, phase_fn, health_fn
+        self.stop_event = threading.Event()
+        self.thread = threading.Thread(target=self._loop, name="resource-sampler", daemon=True)
+
+    @staticmethod
+    def container() -> str | None:
+        ids = sh(["docker", "ps", "-q", "--no-trunc", "--filter", "name=sparkrun_"], 5).split()
+        return ids[0] if ids and not ids[0].startswith("<error") else None
+
+    def sample(self, phase: str | None = None) -> dict:
+        rec: dict = {"ts": now(), "phase": phase or self.phase_fn()}
+        try:
+            mi = lib.parse_meminfo(Path("/proc/meminfo").read_text())
+            rec["mem_total"], rec["mem_available"] = mi.get("total"), mi.get("available")
+        except OSError:
+            pass
+        rec.update(lib.parse_smi(sh(["nvidia-smi", "--query-gpu=utilization.gpu,power.draw,temperature.gpu",
+                                     "--format=csv,noheader,nounits"], 5)))
+        cid = self.container()
+        if cid:
+            rec["container"] = cid[:12]
+            for k, f in (("container_mem", "memory.current"), ("container_mem_peak", "memory.peak")):
+                try:
+                    rec[k] = int(Path(f"/sys/fs/cgroup/system.slice/docker-{cid}.scope/{f}").read_text())
+                except (OSError, ValueError):
+                    pass
+            rec["healthy"] = self.health_fn()
+        else:
+            rec["healthy"] = False
+        return rec
+
+    def write(self, rec: dict) -> None:
+        with open(self.path, "a") as f:
+            f.write(json.dumps(rec) + "\n")
+
+    def _loop(self) -> None:
+        while not self.stop_event.is_set():
+            try:
+                self.write(self.sample())
+            except Exception:  # noqa: BLE001
+                pass
+            self.stop_event.wait(self.interval)
+
+    def start(self) -> None:
+        self.thread.start()
+
+    def stop(self) -> None:
+        self.stop_event.set()
+        self.thread.join(timeout=30)
+
+
 class Harness:
     def __init__(self, recipe: Path, dry_run: bool, smoke: bool, rerun_depth: int | None = None,
                  merge_into: Path | None = None, replaces: list[int] | None = None):
@@ -128,6 +184,8 @@ class Harness:
         self.launches = 0
         self.skip_run_calls = 0
         self.skip_run_ok = 0
+        self.sampler: ResourceSampler | None = None
+        self.resources: dict = {"config": lib.resource_config(self.recipe_doc)}
 
     # ------------------------------------------------------------ plumbing
     def log(self, msg: str) -> None:
@@ -347,10 +405,82 @@ class Harness:
             "container_image": (self.platform.get("container") or {}).get("container_image"),
             "sparkrun_version": self.platform.get("sparkrun_version"), "harness_commit": self.platform.get("harness_commit"),
             "server_reuse": {"launches": self.launches, "skip_run_calls": self.skip_run_calls, "skip_run_ok": self.skip_run_ok},
+            "resources": self.resources,
         })
         (self.dir / "summary.json").write_text(lib.jdump(self.summary))
         (self.dir / "summary.md").write_text(lib.render_summary(self.summary))
         (self.dir / "platform.json").write_text(lib.jdump(self.platform))
+
+    def quick_health(self) -> bool:
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{self.port}/v1/models", timeout=3) as r:
+                return r.status == 200
+        except Exception:  # noqa: BLE001
+            return False
+
+    def start_sampler(self) -> None:
+        """Baseline samples before the model loads, then background sampling for the rest of the run."""
+        self.resources = {"config": lib.resource_config(self.recipe_doc)}
+        if self.dry_run:
+            return
+        try:
+            rc = self.cfg.get("resources") or {}
+            self.sampler = ResourceSampler(self.dir / "resources.jsonl", float(rc.get("interval_s", 10)),
+                                           lambda: self.current_phase, self.quick_health)
+            for i in range(int(rc.get("baseline_samples", 3))):
+                self.sampler.write(self.sampler.sample("baseline"))
+                if i < int(rc.get("baseline_samples", 3)) - 1:
+                    time.sleep(2)
+            self.sampler.start()
+            self.log(f"resource sampler started ({self.sampler.interval}s) -> resources.jsonl")
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+            self.sampler = None
+
+    def stop_sampler(self) -> None:
+        try:
+            if self.sampler is not None:
+                self.sampler.stop()
+                self.sampler.write(self.sampler.sample("after-stop"))
+            path = self.dir / "resources.jsonl"
+            samples = []
+            if path.exists():
+                for line in path.read_text().splitlines():
+                    try:
+                        samples.append(json.loads(line))
+                    except ValueError:
+                        pass
+            self.resources["memory"] = lib.summarize_resources(samples)
+            self.summary["resources"] = self.resources
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+
+    def save_server_logs(self) -> None:
+        """Copy the inference container's logs into diagnostics/ before sparkrun removes the container."""
+        if self.dry_run:
+            return
+        try:
+            names = sh(["docker", "ps", "-a", "--format", "{{.Names}}", "--filter", "name=sparkrun_"], 30).split()
+            text = ""
+            for n in names:
+                if n.startswith("<error"):
+                    continue
+                for fname, cmd in ((f"server-{n}.docker.log", ["docker", "logs", n]),
+                                   (f"server-{n}.serve.log", ["docker", "exec", n, "cat", "/tmp/sparkrun_serve.log"])):
+                    try:
+                        p = subprocess.run(cmd, capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL, errors="replace")
+                    except Exception as e:  # noqa: BLE001
+                        self.log(f"server log {fname}: {e}")
+                        continue
+                    out = (p.stdout or "") + (p.stderr or "")
+                    if out.strip() and p.returncode == 0:
+                        (self.dir / "diagnostics" / fname).write_text(out)
+                        text += out
+                self.log(f"saved server logs of {n}")
+            self.resources["server"] = lib.parse_server_log(text) if text else {}
+            self.summary["resources"] = self.resources
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
 
     def stop_server(self) -> None:
         if self.dry_run:
@@ -454,11 +584,14 @@ class Harness:
             if self.health():
                 self.log(f"ERROR: something already serves on port {self.port}; refusing to benchmark it")
                 return 2
+            self.start_sampler()
             self.phase("performance", self.run_perf, self.summarize_perf)
             if self.rerun_depth is None:
                 self.phase("tools", self.run_tools, self.summarize_tools)
         finally:
+            self.save_server_logs()
             self.stop_server()
+            self.stop_sampler()
             self.current_phase = "teardown"
             if self.proxy is not None:
                 try:

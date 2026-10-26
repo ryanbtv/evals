@@ -203,6 +203,7 @@ def render_summary(s: dict) -> str:
         err = (ph.get("error") or "").replace("|", "\\|").replace("\n", " ")[:200]
         L.append(f"| {name} | {ph.get('status')} | {_f(ph.get('duration_s'), 0)} | {err} |")
     L.append("")
+    L += render_resources(s.get("resources"))
     grid = s.get("perf_grid") or []
     if grid:
         concs = sorted({c["concurrency"] for c in grid})
@@ -249,9 +250,10 @@ def render_summary(s: dict) -> str:
 def leaderboard(summaries: list[dict]) -> str:
     L = ["# Leaderboard", "", "Generated from `runs/*/summary.json`. See each run's `summary.md` for full grids.", "",
          "Decode tok/s per request (tg/req) and prefill tok/s (pp) at each run's short (smallest) and long (largest) depth.",
-         "† context-load row only (measured requests failed); \\* some requests failed.", "",
-         "| Run | Model | Short depth | tg/req c1 | tg/req c4 | pp c1 | Long depth | tg/req c1 | tg/req c4 | pp c1 | Tools score |",
-         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
+         "† context-load row only (measured requests failed); \\* some requests failed.",
+         "Memory columns are unified-memory GiB: footprint = used after load minus baseline; min available = the run's tightest headroom; — = not recorded.", "",
+         "| Run | Model | Short depth | tg/req c1 | tg/req c4 | pp c1 | Long depth | tg/req c1 | tg/req c4 | pp c1 | Tools score | Model footprint GiB | Peak used GiB | Min available GiB |",
+         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
 
     def cell(s, d, c, f):
         for x in s.get("perf_grid") or []:
@@ -261,11 +263,13 @@ def leaderboard(summaries: list[dict]) -> str:
 
     for s in sorted(summaries, key=lambda x: x.get("run_id", ""), reverse=True):
         rid = s.get("run_id", "")
+        mem = (s.get("resources") or {}).get("memory") or {}
         depths = sorted({x["depth"] for x in s.get("perf_grid") or []}) or [None]
         lo, hi = depths[0], depths[-1]
         L.append(f"| [{rid}](runs/{rid}/summary.md) | {s.get('model')} | {lo} | {cell(s,lo,1,'tg_req_tok_s')} | {cell(s,lo,4,'tg_req_tok_s')} | "
                  f"{cell(s,lo,1,'pp_tok_s')} | {hi} | {cell(s,hi,1,'tg_req_tok_s')} | {cell(s,hi,4,'tg_req_tok_s')} | "
-                 f"{cell(s,hi,1,'pp_tok_s')} | {(s.get('tools') or {}).get('final_score', '—')} |")
+                 f"{cell(s,hi,1,'pp_tok_s')} | {(s.get('tools') or {}).get('final_score', '—')} | "
+                 f"{_f(mem.get('model_footprint_gib'))} | {_f(mem.get('peak_used_gib'))} | {_f(mem.get('min_available_gib'))} |")
     return "\n".join(L) + "\n"
 
 
@@ -321,6 +325,143 @@ def sanitize_tree(src: Path, dst: Path) -> list[str]:
 
 def jdump(obj: Any) -> str:
     return json.dumps(obj, indent=2, sort_keys=False, default=str)
+
+
+# ---------------------------------------------------------------- resources
+
+GIB = 1024 ** 3
+# Recipe `defaults` keys that size the server's memory; recorded as-is when present.
+RESOURCE_KEYS = ("gpu_memory_utilization", "mem_fraction_static", "kv_cache_bytes", "kv_cache_dtype",
+                 "max_model_len", "context_length", "max_num_seqs", "max_running_requests",
+                 "max_num_batched_tokens", "tensor_parallel", "num_speculative_tokens", "speculative_algorithm")
+
+
+def parse_meminfo(text: str) -> dict:
+    """/proc/meminfo -> {"total": bytes, "available": bytes} (keys omitted when missing)."""
+    out = {}
+    for line in text.splitlines():
+        m = re.match(r"(MemTotal|MemAvailable):\s+(\d+)\s*kB", line)
+        if m:
+            out["total" if m[1] == "MemTotal" else "available"] = int(m[2]) * 1024
+    return out
+
+
+def parse_smi(text: str) -> dict:
+    """One `nvidia-smi --query-gpu=utilization.gpu,power.draw,temperature.gpu --format=csv,noheader,nounits` line."""
+    keys = ("gpu_util_pct", "power_w", "temp_c")
+    vals = [v.strip() for v in (text.strip().splitlines() or [""])[0].split(",")]
+    out = {}
+    for k, v in zip(keys, vals):
+        try:
+            out[k] = float(v)
+        except ValueError:
+            pass
+    return out
+
+
+def resource_config(recipe_doc: dict | None) -> dict:
+    doc = recipe_doc or {}
+    d = doc.get("defaults") or {}
+    cfg = {"runtime": doc.get("runtime"), "container": doc.get("container")}
+    cfg.update({k: d[k] for k in RESOURCE_KEYS if k in d})
+    cmd = str(doc.get("command") or "")
+    for flag in ("mem-fraction-static", "gpu-memory-utilization", "kv-cache-memory-bytes", "max-running-requests",
+                 "max-num-seqs", "chunked-prefill-size", "max-model-len", "context-length", "cuda-graph-max-bs-decode"):
+        m = re.search(rf"--{flag}[ =](\S+)", cmd)
+        if m:
+            v = m[1]
+            m2 = re.fullmatch(r"\{(\w+)\}", v)
+            cfg[f"--{flag}"] = d.get(m2[1], v) if m2 else v
+    return {k: v for k, v in cfg.items() if v is not None}
+
+
+def parse_server_log(text: str) -> dict:
+    """KV capacity and pressure signals from a vLLM or SGLang server log."""
+    out: dict = {}
+    m = re.search(r"GPU KV cache size: ([\d,]+) tokens", text)                     # vLLM
+    if m:
+        out["kv_tokens"] = int(m[1].replace(",", ""))
+    m = re.search(r"Maximum concurrency for ([\d,]+) tokens per request: ([\d.]+)x", text)
+    if m:
+        out["kv_max_concurrency"] = {"tokens_per_request": int(m[1].replace(",", "")), "x": float(m[2])}
+    m = re.search(r"max_total_num_tokens=(\d+)", text)                              # SGLang
+    if m:
+        out["kv_tokens"] = int(m[1])
+    m = re.search(r"max_running_requests=(\d+)", text)
+    if m:
+        out["max_running_requests"] = int(m[1])
+    m = re.search(r"Model loading took ([\d.]+) GiB", text) or re.search(r"Load weight end\..*?mem usage=([\d.]+) GB", text)
+    if m:
+        out["weights_gib"] = float(m[1])
+    m = re.search(r"reserved ([\d.]+) GiB memory for KV Cache", text) or re.search(r"KV Cache is allocated\..*?K size: ([\d.]+) GB, V size: ([\d.]+) GB", text)
+    if m:
+        out["kv_cache_gib"] = round(sum(float(x) for x in m.groups()), 2)
+    usage = [float(x) for x in re.findall(r"GPU KV cache usage: ([\d.]+)%", text)]
+    usage += [float(x) * 100 for x in re.findall(r"token usage: ([\d.]+)", text)]
+    if usage:
+        out["kv_usage_peak_pct"] = round(max(usage), 1)
+    out["preemptions"] = len(re.findall(r"(?i)\bpreempted\b", text))
+    out["retractions"] = len(re.findall(r"(?i)\bretract(?:ed|ion|ing)?\b", text))
+    waiting = [int(x) for x in re.findall(r"(?:Waiting: |#queue-req: )(\d+)", text)]
+    if waiting:
+        out["max_waiting_requests"] = max(waiting)
+    return out
+
+
+def summarize_resources(samples: list[dict]) -> dict:
+    """Headroom from resources.jsonl samples (phase, healthy, mem_total, mem_available, gpu fields)."""
+    good = [x for x in samples if x.get("mem_available") is not None]
+    if not good:
+        return {}
+    gb = lambda b: None if b is None else round(b / GIB, 1)  # noqa: E731
+    total = next((x["mem_total"] for x in good if x.get("mem_total")), None)
+    used = lambda x: x["mem_total"] - x["mem_available"] if x.get("mem_total") else None  # noqa: E731
+    base = [x for x in good if x.get("phase") == "baseline"] or good[:1]
+    loaded = next((x for x in good if x.get("healthy") and x.get("phase") != "baseline"), None)
+    base_used = min(used(x) for x in base)
+    out = {
+        "mem_total_gib": gb(total), "samples": len(samples),
+        "baseline_used_gib": gb(base_used),
+        "loaded_used_gib": gb(used(loaded)) if loaded else None,
+        "model_footprint_gib": gb(used(loaded) - base_used) if loaded else None,
+        "peak_used_gib": gb(max(used(x) for x in good)),
+        "min_available_gib": gb(min(x["mem_available"] for x in good)),
+        "phases": {},
+    }
+    for ph in dict.fromkeys(x.get("phase") for x in good):
+        xs = [x for x in good if x.get("phase") == ph]
+        pick = lambda k, f: (lambda v: f(v) if v else None)([x[k] for x in xs if x.get(k) is not None])  # noqa: E731
+        out["phases"][ph] = {
+            "peak_used_gib": gb(max(used(x) for x in xs)), "min_available_gib": gb(min(x["mem_available"] for x in xs)),
+            "container_peak_gib": gb(pick("container_mem", max)),
+            "gpu_util_mean_pct": (lambda v: round(v, 1) if v is not None else None)(pick("gpu_util_pct", lambda v: sum(v) / len(v))),
+            "power_max_w": pick("power_w", max), "temp_max_c": pick("temp_c", max), "samples": len(xs)}
+    return out
+
+
+def render_resources(r: dict | None) -> list[str]:
+    r = r or {}
+    if not (r.get("memory") or r.get("config") or r.get("server")):
+        return []
+    m, L = r.get("memory") or {}, ["## Resources", ""]
+    if m:
+        L += ["Unified memory (GiB, from /proc/meminfo; GB10 shares CPU/GPU memory, so this is the true headroom).", "",
+              "| Total | Baseline used | After load | Model footprint | Peak used | Min available |",
+              "|---:|---:|---:|---:|---:|---:|",
+              f"| {_f(m.get('mem_total_gib'))} | {_f(m.get('baseline_used_gib'))} | {_f(m.get('loaded_used_gib'))} | "
+              f"{_f(m.get('model_footprint_gib'))} | {_f(m.get('peak_used_gib'))} | {_f(m.get('min_available_gib'))} |", ""]
+        if m.get("phases"):
+            L += ["| Phase | Peak used | Min available | Container peak | GPU util mean % | Power max W | Temp max °C | Samples |",
+                  "|---|---:|---:|---:|---:|---:|---:|---:|"]
+            for ph, p in m["phases"].items():
+                L.append(f"| {ph} | {_f(p.get('peak_used_gib'))} | {_f(p.get('min_available_gib'))} | {_f(p.get('container_peak_gib'))} | "
+                         f"{_f(p.get('gpu_util_mean_pct'))} | {_f(p.get('power_max_w'))} | {_f(p.get('temp_max_c'), 0)} | {p.get('samples')} |")
+            L.append("")
+    if r.get("server"):
+        L += ["Server log: " + ", ".join(f"{k}={v}" for k, v in r["server"].items()), ""]
+    if r.get("config"):
+        L += ["Config: " + ", ".join(f"`{k}`={v}" for k, v in r["config"].items()), ""]
+    return L
 
 
 # ---------------------------------------------------------------- preflight

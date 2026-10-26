@@ -110,9 +110,11 @@ stopped through `sparkrun.api.stop` in a `finally` block, with a
 ## Metrics
 
 - **pp tok/s** — prompt-processing throughput, aggregate across concurrent requests.
-- **tg tok/s (aggregate)** — llama-benchy `tg_throughput`. At concurrency > 1 this is the
-  *total* decode rate of the whole batch (decoded tokens / batch decode time), not a
-  per-user speed. At concurrency 1 it equals the per-request value.
+- **tg tok/s (aggregate)** — llama-benchy `tg_throughput`. At concurrency > 1 this is
+  all decoded tokens divided by (latest last token − earliest first token) of the batch.
+  That window includes time later requests spend queued or prefilling, so when requests
+  serialize (for example the KV pool cannot hold all contexts) it falls far below the
+  per-request speed. At concurrency 1 it equals the per-request value.
 - **tg tok/s per request** — llama-benchy `tg_req_throughput`: mean decode speed one
   request observes. This is the user-experienced speed.
   (Verified in llama-benchy 0.4.0 `results.py`: `tg_throughput` is documented
@@ -130,6 +132,19 @@ stopped through `sparkrun.api.stop` in a `finally` block, with a
   and listed with their first error message in `summary.md`.
 - **Tool score** — tool-eval-bench `final_score` (0–100) plus its rating, deployability,
   responsiveness and points.
+- **Resources** — a background thread samples every 10 s (`resources:` in
+  `bench/config.yaml`) into `resources.jsonl`: `/proc/meminfo` MemTotal/MemAvailable,
+  `nvidia-smi` GPU util/power/temp, the model container's cgroup `memory.current` /
+  `memory.peak`, and whether the server answers. GB10 memory is unified and nvidia-smi
+  reports no per-process memory, so host MemAvailable is the real headroom (the container
+  cgroup misses CUDA allocations). Baseline = samples after preflight, before the model
+  loads; model footprint = used memory at the first healthy sample minus baseline; peak
+  used / min available are over the whole run and per phase. Static sizing (runtime,
+  image, mem-fraction / gpu-memory-utilization / kv_cache_bytes, chunked prefill) comes
+  from the recipe. Before teardown the container's `docker logs` and
+  `/tmp/sparkrun_serve.log` are saved to `diagnostics/server-<container>.*.log` and parsed
+  for KV token capacity, weights / KV GiB, peak KV usage, max waiting requests,
+  preemptions (vLLM) and retractions (SGLang).
 
 ## Outputs per run
 

@@ -42,6 +42,27 @@ def relabel_published(runs_root: Path) -> None:
     (runs_root.parent / "leaderboard.md").write_text(lib.leaderboard(sums))
 
 
+def rebuild_resources(run_dir: Path, s: dict) -> None:
+    """Recompute the Resources section from resources.jsonl and saved server logs, when present."""
+    r = dict(s.get("resources") or {})
+    if (run_dir / "recipe.yml").exists():
+        r.setdefault("config", lib.resource_config(yaml.safe_load((run_dir / "recipe.yml").read_text()) or {}))
+    path = run_dir / "resources.jsonl"
+    if path.exists():
+        samples = []
+        for line in path.read_text().splitlines():
+            try:
+                samples.append(json.loads(line))
+            except ValueError:
+                pass
+        r["memory"] = lib.summarize_resources(samples)
+    logs = sorted((run_dir / "diagnostics").glob("server-*.log"))
+    if logs:
+        r["server"] = lib.parse_server_log("".join(p.read_text(errors="replace") for p in logs))
+    if r:
+        s["resources"] = r
+
+
 def task_errors(run_dir: Path) -> dict:
     errs = {}
     logs = list((run_dir / "perf-tasks").glob("*.log")) + list(run_dir.glob("rerun-*/perf-tasks/*.log"))
@@ -61,6 +82,7 @@ def rebuild(run_dir: Path) -> dict:
     s["perf_grid"] = lib.perf_grid(json.loads((run_dir / "perf.json").read_text()), depths, concs, task_errors(run_dir))
     if (run_dir / "tools.json").exists():
         s["tools"] = lib.tools_score(json.loads((run_dir / "tools.json").read_text()))
+    rebuild_resources(run_dir, s)
     notes = [f"d{x['depth']}c{x['concurrency']}:{x['status']}" for x in s["perf_grid"] if x["status"] != "ok"]
     notes += [f"d{x['depth']}c{x['concurrency']}:{x['request_errors']['count']} failed requests"
               for x in s["perf_grid"] if x["status"] == "ok" and x.get("request_errors")]

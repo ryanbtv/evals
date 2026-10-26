@@ -41,6 +41,11 @@ tools:
     temperature: 0.0
   timeout_s: 21600       # whole suite
 
+# Background host/GPU/container sampling into resources.jsonl (headroom in summary + leaderboard).
+resources:
+  interval_s: 10
+  baseline_samples: 3   # taken 2 s apart after preflight, before the model loads
+
 # BENCH_SMOKE=1 overlays these values. Harness validation only.
 smoke:
   performance:
