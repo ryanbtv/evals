@@ -142,6 +142,29 @@ def cell_text(cell: dict | None, field: str, nd: int) -> str:
     return text
 
 
+OVERVIEW_METRICS = (("Aggregate decode tok/s", "tg_tok_s", 1), ("Per-request decode tok/s", "tg_req_tok_s", 1), ("Prefill tok/s", "pp_tok_s", 0))
+
+
+def perf_overview(grid: list[dict]) -> dict:
+    """At-a-glance table: one row per metric x depth, one column per concurrency run."""
+    concs = sorted({c["concurrency"] for c in grid or []})
+    depths = sorted({c["depth"] for c in grid or []})
+    key = {(c["depth"], c["concurrency"]): c for c in grid or []}
+    rows = [{"metric": title, "depth": d, "values": {f"c{c}": ("—" if (d, c) not in key else cell_text(key[(d, c)], field, nd)) for c in concs}}
+            for title, field, nd in OVERVIEW_METRICS for d in depths]
+    return {"columns": [f"c{c}" for c in concs], "rows": rows}
+
+
+def render_overview(ov: dict) -> list[str]:
+    if not ov or not ov.get("rows"):
+        return []
+    cols = ov["columns"]
+    L = ["## At a glance", "", "| metric, depth | " + " | ".join(cols) + " |", "|---|" + "---:|" * len(cols)]
+    L += [f"| {r['metric']}, {r['depth']} | " + " | ".join(r["values"].get(c, "—") for c in cols) + " |" for r in ov["rows"]]
+    return L + ["", "Aggregate decode counts the whole batch window, including time requests spend queued or prefilling; "
+                "per-request decode is the speed one user sees once tokens flow.", ""]
+
+
 def consolidate_tasks(tasks: list) -> dict:
     """Merge per-task framework JSON from sparkrun's task cache.
 
@@ -209,6 +232,7 @@ def render_summary(s: dict) -> str:
         concs = sorted({c["concurrency"] for c in grid})
         depths = sorted({c["depth"] for c in grid})
         key = {(c["depth"], c["concurrency"]): c for c in grid}
+        L += render_overview(perf_overview(grid))
         for title, field, nd in (("Prefill pp tok/s (aggregate)", "pp_tok_s", 0),
                                  ("Decode tg tok/s (aggregate across concurrent requests)", "tg_tok_s", 1),
                                  ("Decode tg tok/s per request", "tg_req_tok_s", 1),

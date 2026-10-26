@@ -418,5 +418,255 @@
     }
   ],
   "resummarized_with": "58ba17a9ec04ca573ccbee86daa79cd761308075",
-  "served_model_name": "qwen3.8-27b"
+  "served_model_name": "qwen3.8-27b",
+  "perf_overview": {
+    "columns": [
+      "c1",
+      "c2",
+      "c4",
+      "c8"
+    ],
+    "rows": [
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 0,
+        "values": {
+          "c1": "26.7",
+          "c2": "50.3",
+          "c4": "77.5",
+          "c8": "68.1"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 4096,
+        "values": {
+          "c1": "27.7",
+          "c2": "44.7",
+          "c4": "54.3",
+          "c8": "42.7"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 16384,
+        "values": {
+          "c1": "26.6",
+          "c2": "42.9",
+          "c4": "37.9",
+          "c8": "17.0"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 32768,
+        "values": {
+          "c1": "25.1",
+          "c2": "38.4",
+          "c4": "33.1",
+          "c8": "7.9"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "22.4",
+          "c2": "39.6",
+          "c4": "8.4",
+          "c8": "3.4"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 131072,
+        "values": {
+          "c1": "19.9",
+          "c2": "26.0",
+          "c4": "1.8",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 196608,
+        "values": {
+          "c1": "19.3",
+          "c2": "16.3",
+          "c4": "FAIL",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 258048,
+        "values": {
+          "c1": "16.8",
+          "c2": "0.6",
+          "c4": "FAIL",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 0,
+        "values": {
+          "c1": "26.7",
+          "c2": "26.5",
+          "c4": "20.9",
+          "c8": "17.8"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 4096,
+        "values": {
+          "c1": "27.7",
+          "c2": "23.9",
+          "c4": "19.0",
+          "c8": "13.9"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 16384,
+        "values": {
+          "c1": "26.6",
+          "c2": "22.5",
+          "c4": "15.7",
+          "c8": "8.9"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 32768,
+        "values": {
+          "c1": "25.1",
+          "c2": "19.8",
+          "c4": "14.7",
+          "c8": "5.7"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "22.4",
+          "c2": "20.5",
+          "c4": "6.3",
+          "c8": "3.4"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 131072,
+        "values": {
+          "c1": "19.9",
+          "c2": "14.8",
+          "c4": "9.0",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 196608,
+        "values": {
+          "c1": "19.3",
+          "c2": "10.8",
+          "c4": "FAIL",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 258048,
+        "values": {
+          "c1": "16.8",
+          "c2": "16.5",
+          "c4": "FAIL",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 0,
+        "values": {
+          "c1": "2291",
+          "c2": "2184",
+          "c4": "1935",
+          "c8": "1187"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 4096,
+        "values": {
+          "c1": "688",
+          "c2": "944",
+          "c4": "956",
+          "c8": "645"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 16384,
+        "values": {
+          "c1": "355",
+          "c2": "354",
+          "c4": "402",
+          "c8": "278"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 32768,
+        "values": {
+          "c1": "288",
+          "c2": "287",
+          "c4": "328",
+          "c8": "126"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "206",
+          "c2": "208",
+          "c4": "111",
+          "c8": "47"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 131072,
+        "values": {
+          "c1": "135",
+          "c2": "137",
+          "c4": "20",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 196608,
+        "values": {
+          "c1": "100",
+          "c2": "16",
+          "c4": "FAIL",
+          "c8": "FAIL"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 258048,
+        "values": {
+          "c1": "130",
+          "c2": "9",
+          "c4": "FAIL",
+          "c8": "FAIL"
+        }
+      }
+    ]
+  }
 }

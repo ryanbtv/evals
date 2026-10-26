@@ -12,6 +12,37 @@
 | tools | not run | — | run stopped at poll cap before this phase |
 | ctf | not run | — | run stopped at poll cap before this phase |
 
+## At a glance
+
+| metric, depth | c1 | c2 | c4 | c8 |
+|---|---:|---:|---:|---:|
+| Aggregate decode tok/s, 0 | 26.7 | 50.3 | 77.5 | 68.1 |
+| Aggregate decode tok/s, 4096 | 27.7 | 44.7 | 54.3 | 42.7 |
+| Aggregate decode tok/s, 16384 | 26.6 | 42.9 | 37.9 | 17.0 |
+| Aggregate decode tok/s, 32768 | 25.1 | 38.4 | 33.1 | 7.9 |
+| Aggregate decode tok/s, 65536 | 22.4 | 39.6 | 8.4 | 3.4 |
+| Aggregate decode tok/s, 131072 | 19.9 | 26.0 | 1.8 | FAIL |
+| Aggregate decode tok/s, 196608 | 19.3 | 16.3 | FAIL | FAIL |
+| Aggregate decode tok/s, 258048 | 16.8 | 0.6 | FAIL | FAIL |
+| Per-request decode tok/s, 0 | 26.7 | 26.5 | 20.9 | 17.8 |
+| Per-request decode tok/s, 4096 | 27.7 | 23.9 | 19.0 | 13.9 |
+| Per-request decode tok/s, 16384 | 26.6 | 22.5 | 15.7 | 8.9 |
+| Per-request decode tok/s, 32768 | 25.1 | 19.8 | 14.7 | 5.7 |
+| Per-request decode tok/s, 65536 | 22.4 | 20.5 | 6.3 | 3.4 |
+| Per-request decode tok/s, 131072 | 19.9 | 14.8 | 9.0 | FAIL |
+| Per-request decode tok/s, 196608 | 19.3 | 10.8 | FAIL | FAIL |
+| Per-request decode tok/s, 258048 | 16.8 | 16.5 | FAIL | FAIL |
+| Prefill tok/s, 0 | 2291 | 2184 | 1935 | 1187 |
+| Prefill tok/s, 4096 | 688 | 944 | 956 | 645 |
+| Prefill tok/s, 16384 | 355 | 354 | 402 | 278 |
+| Prefill tok/s, 32768 | 288 | 287 | 328 | 126 |
+| Prefill tok/s, 65536 | 206 | 208 | 111 | 47 |
+| Prefill tok/s, 131072 | 135 | 137 | 20 | FAIL |
+| Prefill tok/s, 196608 | 100 | 16 | FAIL | FAIL |
+| Prefill tok/s, 258048 | 130 | 9 | FAIL | FAIL |
+
+Aggregate decode counts the whole batch window, including time requests spend queued or prefilling; per-request decode is the speed one user sees once tokens flow.
+
 ## Prefill pp tok/s (aggregate)
 
 | depth \ conc | 1 | 2 | 4 | 8 |

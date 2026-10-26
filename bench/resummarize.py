@@ -36,6 +36,8 @@ def relabel_published(runs_root: Path) -> None:
     for sj in sorted(runs_root.glob("*/summary.json")):
         s = json.loads(sj.read_text())
         relabel(sj.parent, s)
+        if s.get("perf_grid"):
+            s["perf_overview"] = lib.perf_overview(s["perf_grid"])
         sj.write_text(lib.jdump(s))
         (sj.parent / "summary.md").write_text(lib.render_summary(s))
     sums = [json.loads(p.read_text()) for p in sorted(runs_root.glob("*/summary.json"))]
@@ -80,6 +82,7 @@ def rebuild(run_dir: Path) -> dict:
     depths = s.get("perf_depths") or ba["depth"]
     concs = s.get("perf_concurrency") or ba["concurrency"]
     s["perf_grid"] = lib.perf_grid(json.loads((run_dir / "perf.json").read_text()), depths, concs, task_errors(run_dir))
+    s["perf_overview"] = lib.perf_overview(s["perf_grid"])
     if (run_dir / "tools.json").exists():
         s["tools"] = lib.tools_score(json.loads((run_dir / "tools.json").read_text()))
     rebuild_resources(run_dir, s)

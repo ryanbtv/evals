@@ -361,6 +361,7 @@ class Harness:
         res = self.results_of(self.results.get("performance"), self.dir / "perf.yaml")
         errors = self.task_log_errors(self.dir / "perf.yaml")
         self.summary["perf_grid"] = lib.perf_grid(res, c["bench_args"]["depth"], c["bench_args"]["concurrency"], errors)
+        self.summary["perf_overview"] = lib.perf_overview(self.summary["perf_grid"])
         notes = [f"d{x['depth']}c{x['concurrency']}:{x['status']}" for x in self.summary["perf_grid"] if x["status"] != "ok"]
         notes += [f"d{x['depth']}c{x['concurrency']}:{x['request_errors']['count']} failed requests"
                   for x in self.summary["perf_grid"] if x["status"] == "ok" and x.get("request_errors")]
