@@ -14,6 +14,19 @@
 | tools | ok | 6394 |  |
 | performance (rerun-20261025T221614Z, depth 259840) | ok | 15050 |  |
 
+## At a glance
+
+| metric, depth | c1 | c2 | c4 |
+|---|---:|---:|---:|
+| Aggregate decode tok/s, 65536 | 24.1 | 38.7 | 7.2 |
+| Aggregate decode tok/s, 259840 | 15.4 | 0.6 | 0.4 |
+| Per-request decode tok/s, 65536 | 24.1 | 20.1 | 5.8 |
+| Per-request decode tok/s, 259840 | 15.4 | 16.2 | 17.2 |
+| Prefill tok/s, 65536 | 208 | 209 | 87 |
+| Prefill tok/s, 259840 | 101 | 8 | 6 |
+
+Aggregate decode counts the whole batch window, including time requests spend queued or prefilling; per-request decode is the speed one user sees once tokens flow.
+
 ## Prefill pp tok/s (aggregate)
 
 | depth \ conc | 1 | 2 | 4 |

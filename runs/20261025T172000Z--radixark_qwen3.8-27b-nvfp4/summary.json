@@ -268,5 +268,68 @@
       }
     }
   ],
-  "served_model_name": "qwen3.8-27b"
+  "served_model_name": "qwen3.8-27b",
+  "perf_overview": {
+    "columns": [
+      "c1",
+      "c2",
+      "c4"
+    ],
+    "rows": [
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "24.1",
+          "c2": "38.7",
+          "c4": "7.2"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "15.4",
+          "c2": "0.6",
+          "c4": "0.4"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "24.1",
+          "c2": "20.1",
+          "c4": "5.8"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "15.4",
+          "c2": "16.2",
+          "c4": "17.2"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "208",
+          "c2": "209",
+          "c4": "87"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "101",
+          "c2": "8",
+          "c4": "6"
+        }
+      }
+    ]
+  }
 }

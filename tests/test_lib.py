@@ -259,6 +259,23 @@ class TestSampler(unittest.TestCase):
             self.assertEqual(__import__("json").loads(lines[0])["phase"], "baseline")
 
 
+class TestOverview(unittest.TestCase):
+    def test_overview_rows_and_missing(self):
+        grid = [{"depth": 65536, "concurrency": 1, "status": "ok", "tg_tok_s": 24.08, "tg_req_tok_s": 24.08, "pp_tok_s": 207.5},
+                {"depth": 65536, "concurrency": 4, "status": "ok", "tg_tok_s": 7.21, "tg_req_tok_s": 5.83, "pp_tok_s": 86.96},
+                {"depth": 259840, "concurrency": 1, "status": "fail"}]
+        ov = lib.perf_overview(grid)
+        self.assertEqual(ov["columns"], ["c1", "c4"])
+        md = "\n".join(lib.render_overview(ov))
+        self.assertIn("| metric, depth | c1 | c4 |", md)
+        self.assertIn("| Aggregate decode tok/s, 65536 | 24.1 | 7.2 |", md)
+        self.assertIn("| Per-request decode tok/s, 65536 | 24.1 | 5.8 |", md)
+        self.assertIn("| Prefill tok/s, 65536 | 208 | 87 |", md)
+        self.assertIn("| Prefill tok/s, 259840 | FAIL | — |", md)
+        self.assertEqual([r["metric"] for r in ov["rows"]][::2], ["Aggregate decode tok/s", "Per-request decode tok/s", "Prefill tok/s"])
+        self.assertEqual(lib.render_overview(lib.perf_overview([])), [])
+
+
 class TestDisplayModel(unittest.TestCase):
     def test_prefers_recipe_model(self):
         doc = {"model": "RadixArk/Qwen3.8-27B-NVFP4", "defaults": {"served_model_name": "qwen3.8-27b"}}
