@@ -11,6 +11,7 @@ bench/run           entry point: ./bench/run <recipe-path>
 bench/driver.py     orchestration (sparkrun API calls, phases, server reuse, teardown)
 bench/lib.py        pure logic: parsing, task-cache recovery, summaries, leaderboard, sanitization
 bench/config.yaml   all benchmark parameters (committed; identical for every model)
+recipes/<slug>/     canonical sparkrun recipes per model: <slug>.yml, its mods/, benchmark specs
 tests/              offline unit tests (stdlib unittest)
 scripts/sync.sh     deploy the harness to the Spark / pull sanitized results back
 runs/<UTC>--<slug>/ sanitized published results, one directory per run
@@ -24,9 +25,9 @@ smoke-runs/         sanitized smoke results (gitignored)
 On the Spark, with sparkrun installed (`~/.local/bin/sparkrun`):
 
 ```sh
-./bench/run /path/to/recipe.yml                 # full run (many hours)
-./bench/run /path/to/recipe.yml --dry-run       # sparkrun dry_run for every phase
-BENCH_SMOKE=1 ./bench/run /path/to/recipe.yml   # harness validation only
+./bench/run recipes/RadixArk_Qwen3.8-27B-NVFP4.yml   # full run (many hours)
+./bench/run /path/to/recipe.yml --dry-run            # sparkrun dry_run for every phase
+BENCH_SMOKE=1 ./bench/run /path/to/recipe.yml        # harness validation only
 ~/.local/share/uv/tools/sparkrun/bin/python -m unittest discover -s tests
 ```
 
@@ -53,6 +54,15 @@ harness stopped it. The stop and start times are written to `platform.json → p
 `harness.log`. Endpoints behind the proxy are down for the length of a run; this is
 expected.
 
+## Recipes
+
+`recipes/` is the canonical location for the sparkrun recipes this harness runs: one
+directory per model, holding the recipe `<slug>.yml`, the `mods/` it references (paths
+resolve relative to the recipe), and any per-model benchmark spec files. Run a published
+recipe with `./bench/run recipes/<slug>/<slug>.yml`; flat names like
+`RadixArk_Qwen3.8-27B-NVFP4.yml` also sit directly in `recipes/`. Everyone sharing the
+harness should take recipes from here; keep edits in this repo so runs stay reproducible.
+
 ## Repair: re-running one performance depth
 
 This is a maintenance tool, not normal use. It exists to replace invalid cells in an
@@ -76,7 +86,9 @@ It runs only the performance phase at that one depth, with every other parameter
 If the re-run produces no measured rows, the parent run is left unchanged.
 `bench/resummarize.py <raw-run-dir>` rebuilds any run's summary from its raw files.
 From a workstation: `DGX_HOST=user@host scripts/sync.sh deploy`, then
-`scripts/sync.sh pull` to fetch `runs/` and `leaderboard.md` for committing.
+`scripts/sync.sh pull` to fetch `runs/` and `leaderboard.md` for committing. The Spark's
+`~/evals` is a git clone, so `deploy` fast-forwards it to `origin/main` over ssh; push to
+`main` first.
 
 ## Phases
 

@@ -1,0 +1,205 @@
+sparkrun_benchmark:
+  version: '1'
+  timestamp: '2026-10-24T22:47:37.632952+00:00'
+  recipe:
+    name: RadixArk_Qwen3.8-27B-NVFP4
+    qualified_name: /home/ryanb/recipes/RadixArk_Qwen3.8-27B-NVFP4.yml
+    type: sparkrun
+    model: RadixArk/Qwen3.8-27B-NVFP4
+    hf_model: RadixArk/Qwen3.8-27B-NVFP4
+    raw_container: lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
+    container: sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
+    container_pinned: true
+    text: "recipe_version: '2'\nmodel: RadixArk/Qwen3.8-27B-NVFP4\nruntime: sglang\n\
+      max_nodes: 1\ncontainer: sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1\n\
+      metadata:\n  model_dtype: nvfp4\n  description: \"Qwen3.8-27B NVFP4 (RadixArk)\
+      \ + DSpark \\u2014 SGLang on DGX Spark\"\n  num_layers: 64\n  num_kv_heads:\
+      \ 4\n  head_dim: 256\n  quantization: fp8\n  quant_bits: 8\n  kv_dtype: fp8\n\
+      \  model_type: qwen3_5_text\n  model_max_len: 262144\n  attention_layers: 16\n\
+      \  recurrent_state_bytes: 153944064\n  model_params: '10960848640'\ndefaults:\n\
+      \  port: 8000\n  host: 0.0.0.0\n  tensor_parallel: 1\n  gpu_memory_utilization:\
+      \ 0.5\n  served_model_name: qwen3.8-27b\n  attention_backend: flashinfer\n \
+      \ speculative_algorithm: DSPARK\n  speculative_draft_model_path: RadixArk/Qwen3.8-27B-DSpark\n\
+      \  speculative_dspark_block_size: 7\n  speculative_draft_model_quantization:\
+      \ unquant\n  mm_feature_transport: cpu\n  model_revision: 319f741cce68d7914884900c138a1fbb70a42f30\n\
+      \  _prepared_model_path: /cache/huggingface/hub/models--RadixArk--Qwen3.8-27B-NVFP4/snapshots/319f741cce68d7914884900c138a1fbb70a42f30\n\
+      \  _prepared_model_revision: 319f741cce68d7914884900c138a1fbb70a42f30\n  model:\
+      \ /cache/huggingface/hub/models--RadixArk--Qwen3.8-27B-NVFP4/snapshots/319f741cce68d7914884900c138a1fbb70a42f30\n\
+      \  revision: 319f741cce68d7914884900c138a1fbb70a42f30\n  speculative_draft_model_revision:\
+      \ b9a5dbdf03bc999c6c73c426b19c2d9041cea393\ncommand: \"python3 -m sglang.launch_server\
+      \ \\\\\\n  --trust-remote-code \\\\\\n  --model-path\\\n  \\ {model} \\\\\\\
+      n  --tp-size {tensor_parallel} \\\\\\n  --served-model-name {served_model_name}\\\
+      \n  \\ \\\\\\n  --mem-fraction-static {gpu_memory_utilization} \\\\\\n  --attention-backend\\\
+      \n  \\ {attention_backend} \\\\\\n  --chunked-prefill-size 8192 \\\\\\n  --disable-prefill-cuda-graph\\\
+      \n  \\ \\\\\\n  --cuda-graph-max-bs-decode 4 \\\\\\n  --speculative-algorithm\
+      \ {speculative_algorithm}\\\n  \\ \\\\\\n  --speculative-draft-model-path {speculative_draft_model_path}\
+      \ \\\\\\n  --speculative-dspark-block-size\\\n  \\ {speculative_dspark_block_size}\
+      \ \\\\\\n  --speculative-draft-model-quantization {speculative_draft_model_quantization}\\\
+      \n  \\ \\\\\\n  --mamba-radix-cache-strategy extra_buffer \\\\\\n  --mm-feature-transport\
+      \ {mm_feature_transport}\\\n  \\ \\\\\\n  --enable-torch-compile --torch-compile-max-bs\
+      \ 4 \\\\\\n  --num-continuous-decode-steps\\\n  \\ 2 \\\\\\n  --reasoning-parser\
+      \ qwen3 \\\\\\n  --tool-call-parser qwen3_coder \\\\\\n  --host\\\n  \\ {host}\
+      \ \\\\\\n  --port {port}\\n\"\n"
+    hash: 361cd6bd3a4f503ed30171bef29ec882b833c0e367579adfd5e0ad9b1112c018
+    runtime: sglang
+    registry: null
+    registry_git: ''
+    declared_hash: 66180eb6c8c3ef3dce94acd88b8d7cfa3f39a6521827d36828ecc1395f42255a
+  model:
+    dtype: nvfp4
+    params: 10960848640
+    num_layers: 64
+    num_kv_heads: 4
+    head_dim: 256
+    quantization: fp8
+    quant_bits: 8
+    kv_dtype: fp8
+  cluster:
+    tp: 1
+    cluster_id: sparkrun_1a565e149fce1c82_dd2281bb2c9a
+    node_count: 1
+    hosts:
+    - node-49960de5
+    hosts_redacted: true
+    runtime_info:
+      cuda: '13.0'
+      nccl_lib: 2.28.3
+      nccl_torch: 2.29.7
+      python: 3.12.3
+      sglang: 0.0.0.dev0+qwen38.27b.g561c8f3
+      torch: 2.13.0+cu130
+  benchmark:
+    framework: llama-benchy
+    profile: null
+    args:
+      pp:
+      - 2048
+      depth:
+      - 0
+      prefix_caching: true
+      served_model_name: qwen3.8-27b
+      extra_body: return_token_ids=false
+    resumed: false
+    measured_at: '2026-10-24T22:47:24.602486+00:00'
+    completed_at: '2026-10-24T22:47:37.573891+00:00'
+    category: performance
+  results:
+    json:
+      model: RadixArk/Qwen3.8-27B-NVFP4
+      max_concurrency: 1
+      benchmarks:
+      - concurrency: 1
+        context_size: 0
+        prompt_size: 2048
+        response_size: 32
+        is_context_prefill_phase: false
+        pp_throughput:
+          mean: 2278.9720268266606
+          std: 27.61774032700801
+          values:
+          - 2302.45251731788
+          - 2240.2019962346244
+          - 2294.261566927477
+        pp_req_throughput:
+          mean: 2278.9720268266606
+          std: 27.61774032700801
+          values:
+          - 2302.45251731788
+          - 2240.2019962346244
+          - 2294.261566927477
+        tg_throughput:
+          mean: 21.07550542951401
+          std: 1.4766515371688638
+          values:
+          - 22.131116127007886
+          - 18.987246882225982
+          - 22.108153279308166
+        tg_req_throughput:
+          mean: 21.07550542951401
+          std: 1.4766515371688638
+          values:
+          - 22.131116127007886
+          - 18.987246882225982
+          - 22.108153279308166
+        peak_throughput:
+          mean: 21.666666666666668
+          std: 1.8856180831641267
+          values:
+          - 23.0
+          - 19.0
+          - 23.0
+        peak_req_throughput:
+          mean: 21.666666666666668
+          std: 1.8856180831641267
+          values:
+          - 23.0
+          - 19.0
+          - 23.0
+        ttfr:
+          mean: 902.1723519739074
+          std: 10.776422236790427
+          values:
+          - 893.0190759710968
+          - 917.3017179709859
+          - 896.1962619796395
+        est_ppt:
+          mean: 899.0739082801156
+          std: 10.776422236790427
+          values:
+          - 889.9206322773049
+          - 914.203274277194
+          - 893.0978182858477
+        e2e_ttft:
+          mean: 902.1723519739074
+          std: 10.776422236790427
+          values:
+          - 893.0190759710968
+          - 917.3017179709859
+          - 896.1962619796395
+        throughput_over_time: null
+        requests_throughput_over_time: null
+    csv: "model,test_name,t_s_mean,t_s_std,t_s_req_mean,t_s_req_std,peak_ts_mean,peak_ts_std,peak_ts_req_mean,peak_ts_req_std,ttfr_mean,ttfr_std,est_ppt_mean,est_ppt_std,e2e_ttft_mean,e2e_ttft_std\r\
+      \nRadixArk/Qwen3.8-27B-NVFP4,pp2048,2278.9720268266606,27.61774032700801,2278.9720268266606,27.61774032700801,,,,,902.1723519739074,10.776422236790427,899.0739082801156,10.776422236790427,902.1723519739074,10.776422236790427\r\
+      \nRadixArk/Qwen3.8-27B-NVFP4,tg32,21.07550542951401,1.4766515371688638,21.07550542951401,1.4766515371688638,21.666666666666668,1.8856180831641267,21.666666666666668,1.8856180831641267,,,,,,\r\
+      \n"
+    stdout: '{"model": "RadixArk/Qwen3.8-27B-NVFP4", "max_concurrency": 1, "benchmarks":
+      [{"concurrency": 1, "context_size": 0, "prompt_size": 2048, "response_size":
+      32, "is_context_prefill_phase": false, "pp_throughput": {"mean": 2278.9720268266606,
+      "std": 27.61774032700801, "values": [2302.45251731788, 2240.2019962346244, 2294.261566927477]},
+      "pp_req_throughput": {"mean": 2278.9720268266606, "std": 27.61774032700801,
+      "values": [2302.45251731788, 2240.2019962346244, 2294.261566927477]}, "tg_throughput":
+      {"mean": 21.07550542951401, "std": 1.4766515371688638, "values": [22.131116127007886,
+      18.987246882225982, 22.108153279308166]}, "tg_req_throughput": {"mean": 21.07550542951401,
+      "std": 1.4766515371688638, "values": [22.131116127007886, 18.987246882225982,
+      22.108153279308166]}, "peak_throughput": {"mean": 21.666666666666668, "std":
+      1.8856180831641267, "values": [23.0, 19.0, 23.0]}, "peak_req_throughput": {"mean":
+      21.666666666666668, "std": 1.8856180831641267, "values": [23.0, 19.0, 23.0]},
+      "ttfr": {"mean": 902.1723519739074, "std": 10.776422236790427, "values": [893.0190759710968,
+      917.3017179709859, 896.1962619796395]}, "est_ppt": {"mean": 899.0739082801156,
+      "std": 10.776422236790427, "values": [889.9206322773049, 914.203274277194, 893.0978182858477]},
+      "e2e_ttft": {"mean": 902.1723519739074, "std": 10.776422236790427, "values":
+      [893.0190759710968, 917.3017179709859, 896.1962619796395]}, "throughput_over_time":
+      null, "requests_throughput_over_time": null}]}'
+  timing:
+    startup:
+      format: 1
+      measurement: sparkrun-rank0-v1
+      observer: rank0
+      start_boundary: docker.State.StartedAt
+      executor: docker
+      observer_location: rank0-host
+      inference_style: openai-chat-stream-v1
+      ttft_status: measured
+      inference_requested: true
+      inference_ready: true
+      ttr_port_open_s: 445.50551
+      ttr_http_ready_s: 449.918527
+      ttft_s: 450.073028
+      observer_start_delay_s: 10.630977
+      first_token_field: reasoning_content
+      response_validated: false
+      http_ready_path: /health
+      prompt_sha256: 9e49e6e9b25b4b7f3578c08c7761a92e8596dcd26eba9f2f89ee304fc560831e
+      max_tokens: 64
+      temperature: 0
+      request_ttft_s: 0.15431946399621665
