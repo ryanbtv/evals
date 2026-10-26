@@ -1,0 +1,43 @@
+harness_version: 2
+target:
+  solo: true
+  cluster: null
+  health_timeout_s: 10
+preflight:
+  keep_containers:
+  - caddy
+  - bifrost
+  - dockhand
+  - dockhand-postgres
+  systemd_units:
+  - dgx-model-stacks.service
+  proxy_unit: sparkrun-proxy.service
+performance:
+  framework: llama-benchy
+  bench_args:
+    pp:
+    - 2048
+    tg:
+    - 128
+    depth:
+    - 65536
+    - 259840
+    concurrency:
+    - 1
+    - 2
+    - 4
+    runs: 3
+    prefix_caching: true
+  timeout_s: 14400
+tools:
+  framework: tool-eval-bench
+  bench_args:
+    ref: v2.8.0
+    trials: 3
+    hardmode: true
+    temperature: 0.0
+  timeout_s: 21600
+resources:
+  interval_s: 10
+  baseline_samples: 3
+smoke: false
