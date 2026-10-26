@@ -176,6 +176,89 @@ class TestSanitize(unittest.TestCase):
         self.assertIn("8.8.8.8", s)
 
 
+class TestResources(unittest.TestCase):
+    GB = 1024 ** 3
+
+    def s(self, phase, avail_gb, healthy=False, **kw):
+        return {"phase": phase, "mem_total": 120 * self.GB, "mem_available": avail_gb * self.GB, "healthy": healthy, **kw}
+
+    def test_parse_meminfo_and_smi(self):
+        mi = lib.parse_meminfo("MemTotal:       127597524 kB\nMemFree: 1 kB\nMemAvailable:   13918012 kB\n")
+        self.assertEqual(mi, {"total": 127597524 * 1024, "available": 13918012 * 1024})
+        self.assertEqual(lib.parse_smi("96, 69.98, 79\n"), {"gpu_util_pct": 96.0, "power_w": 69.98, "temp_c": 79.0})
+        self.assertEqual(lib.parse_smi("[N/A], [N/A], 40"), {"temp_c": 40.0})
+        self.assertEqual(lib.parse_smi("<error: x>"), {})
+
+    def test_summarize(self):
+        samples = [self.s("baseline", 110), self.s("baseline", 112), self.s("performance", 100),
+                   self.s("performance", 30, True, gpu_util_pct=90, power_w=70, container_mem=8 * self.GB),
+                   self.s("performance", 20, True, gpu_util_pct=100, power_w=80), self.s("tools", 25, True), {"phase": "x"}]
+        r = lib.summarize_resources(samples)
+        self.assertEqual((r["baseline_used_gib"], r["loaded_used_gib"], r["model_footprint_gib"]), (8.0, 90.0, 82.0))
+        self.assertEqual((r["peak_used_gib"], r["min_available_gib"], r["mem_total_gib"]), (100.0, 20.0, 120.0))
+        p = r["phases"]["performance"]
+        self.assertEqual((p["gpu_util_mean_pct"], p["power_max_w"], p["container_peak_gib"], p["samples"]), (95.0, 80, 8.0, 3))
+        self.assertEqual(lib.summarize_resources([]), {})
+
+    def test_parse_vllm_log(self):
+        log = ("INFO [model_runner.py:412] Model loading took 73.92 GiB memory and 46.6 seconds\n"
+               "INFO Initial free memory 114.59 GiB, reserved 9.31 GiB memory for KV Cache as specified\n"
+               "INFO GPU KV cache size: 328,932 tokens, Maximum concurrency for 262,144 tokens per request: 1.25x\n"
+               "INFO Running: 1 reqs, Waiting: 3 reqs, GPU KV cache usage: 12.1%, Prefix cache hit rate: 0.0%\n"
+               "INFO Running: 2 reqs, Waiting: 0 reqs, GPU KV cache usage: 98.5%\n"
+               "WARNING Sequence group 7 is preempted by PreemptionMode.RECOMPUTE\n")
+        r = lib.parse_server_log(log)
+        self.assertEqual((r["kv_tokens"], r["weights_gib"], r["kv_cache_gib"], r["kv_usage_peak_pct"]), (328932, 73.92, 9.31, 98.5))
+        self.assertEqual((r["kv_max_concurrency"]["x"], r["max_waiting_requests"], r["preemptions"], r["retractions"]), (1.25, 3, 1, 0))
+
+    def test_parse_sglang_log(self):
+        log = ("max_total_num_tokens=412345, chunked_prefill_size=8192, max_running_requests=48, retract_decode_steps=20\n"
+               "Decode batch. #running-req: 4, #token: 400000, token usage: 0.97, #queue-req: 2\n"
+               "KV cache pool is full. Retract requests. #retracted_reqs: 1\n")
+        r = lib.parse_server_log(log)
+        self.assertEqual((r["kv_tokens"], r["max_running_requests"], r["kv_usage_peak_pct"], r["max_waiting_requests"]), (412345, 48, 97.0, 2))
+        self.assertEqual(r["retractions"], 1)
+
+    def test_resource_config(self):
+        doc = {"runtime": "sglang", "container": "img@sha", "defaults": {"gpu_memory_utilization": 0.5, "port": 8000},
+               "command": "launch --mem-fraction-static {gpu_memory_utilization} --chunked-prefill-size 8192"}
+        self.assertEqual(lib.resource_config(doc), {"runtime": "sglang", "container": "img@sha", "gpu_memory_utilization": 0.5,
+                                                    "--mem-fraction-static": 0.5, "--chunked-prefill-size": "8192"})
+
+    def test_render_and_leaderboard_missing(self):
+        old = {"run_id": "r1", "model": "m", "perf_grid": []}
+        self.assertNotIn("## Resources", lib.render_summary(old))
+        row = lib.leaderboard([old]).splitlines()[-1]
+        self.assertTrue(row.endswith("| — | — | — |"), row)
+        new = {**old, "resources": {"memory": lib.summarize_resources([self.s("baseline", 110), self.s("performance", 30, True)]),
+                                    "server": {"kv_tokens": 5}, "config": {"runtime": "vllm"}}}
+        md = lib.render_summary(new)
+        self.assertIn("## Resources", md)
+        self.assertIn("| 120.0 | 10.0 | 90.0 | 80.0 | 90.0 | 30.0 |", md)
+        self.assertTrue(lib.leaderboard([new]).splitlines()[-1].endswith("| 80.0 | 90.0 | 30.0 |"))
+
+
+@unittest.skipUnless(__import__("importlib").util.find_spec("yaml"), "driver needs PyYAML")
+class TestSampler(unittest.TestCase):
+    def test_sampler_never_raises_and_stops(self):
+        import tempfile
+        import time
+        import driver
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "resources.jsonl"
+            smp = driver.ResourceSampler(p, 0.05, lambda: "performance", lambda: True)
+            smp.write(smp.sample("baseline"))
+            smp.start()
+            time.sleep(0.2)
+            t0 = time.monotonic()
+            smp.stop()
+            self.assertLess(time.monotonic() - t0, 10)
+            self.assertFalse(smp.thread.is_alive())
+            lines = p.read_text().splitlines()
+            self.assertGreaterEqual(len(lines), 2)
+            self.assertEqual(__import__("json").loads(lines[0])["phase"], "baseline")
+
+
 class TestDisplayModel(unittest.TestCase):
     def test_prefers_recipe_model(self):
         doc = {"model": "RadixArk/Qwen3.8-27B-NVFP4", "defaults": {"served_model_name": "qwen3.8-27b"}}
