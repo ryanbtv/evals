@@ -1,0 +1,373 @@
+{
+  "run_id": "20261026T052146Z--qwen3.8-flash-next-125b-a5b-int4",
+  "model": "azampatti/Qwen3.8-Flash-Next-125B-A5B-INT4-AutoRound",
+  "served_model_name": "Qwen3.8-Flash-Next-125B-A5B-INT4",
+  "recipe_name": "Qwen3.8-Flash-Next-125B-A5B-INT4.yml",
+  "smoke": false,
+  "dry_run": false,
+  "phases": {
+    "performance": {
+      "status": "ok",
+      "started_at": "2026-10-26T05:21:50+00:00",
+      "error": null,
+      "duration_s": 6971.1,
+      "ended_at": "2026-10-26T07:18:01+00:00"
+    },
+    "tools": {
+      "status": "ok",
+      "started_at": "2026-10-26T07:18:01+00:00",
+      "error": null,
+      "duration_s": 3695.7,
+      "ended_at": "2026-10-26T08:19:37+00:00"
+    }
+  },
+  "container_image": "eugr/spark-vllm-b12x@sha256:8e7e062186f841453ef0ec6f713043c5b65447decc3835206685128c18e42262",
+  "sparkrun_version": "0.4.1",
+  "harness_commit": "80420a5d872d806d2839d15451759df6c4bdef17",
+  "server_reuse": {
+    "launches": 1,
+    "skip_run_calls": 1,
+    "skip_run_ok": 1
+  },
+  "resources": {
+    "config": {
+      "runtime": "vllm-distributed",
+      "container": "eugr/spark-vllm-b12x@sha256:8e7e062186f841453ef0ec6f713043c5b65447decc3835206685128c18e42262",
+      "gpu_memory_utilization": 0.01,
+      "kv_cache_bytes": "10g",
+      "kv_cache_dtype": "auto",
+      "max_model_len": 262144,
+      "max_num_seqs": 8,
+      "max_num_batched_tokens": 8192,
+      "tensor_parallel": 1,
+      "num_speculative_tokens": 4,
+      "--gpu-memory-utilization": 0.01,
+      "--kv-cache-memory-bytes": "10g",
+      "--max-num-seqs": 8,
+      "--max-model-len": 262144
+    },
+    "server": {
+      "kv_tokens": 328932,
+      "kv_max_concurrency": {
+        "tokens_per_request": 262144,
+        "x": 1.25
+      },
+      "weights_gib": 73.92,
+      "kv_cache_gib": 9.31,
+      "kv_usage_peak_pct": 96.3,
+      "preemptions": 0,
+      "retractions": 0,
+      "max_waiting_requests": 3
+    },
+    "memory": {
+      "mem_total_gib": 121.7,
+      "samples": 1063,
+      "baseline_used_gib": 4.0,
+      "loaded_used_gib": 108.9,
+      "model_footprint_gib": 104.9,
+      "peak_used_gib": 108.9,
+      "min_available_gib": 12.8,
+      "phases": {
+        "baseline": {
+          "peak_used_gib": 4.0,
+          "min_available_gib": 117.7,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 5.36,
+          "temp_max_c": 52.0,
+          "samples": 3
+        },
+        "preflight": {
+          "peak_used_gib": 4.0,
+          "min_available_gib": 117.7,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 5.35,
+          "temp_max_c": 52.0,
+          "samples": 1
+        },
+        "performance": {
+          "peak_used_gib": 108.9,
+          "min_available_gib": 12.8,
+          "container_peak_gib": 9.1,
+          "gpu_util_mean_pct": 91.1,
+          "power_max_w": 94.4,
+          "temp_max_c": 83.0,
+          "samples": 691
+        },
+        "tools": {
+          "peak_used_gib": 108.6,
+          "min_available_gib": 13.0,
+          "container_peak_gib": 9.2,
+          "gpu_util_mean_pct": 92.9,
+          "power_max_w": 65.01,
+          "temp_max_c": 78.0,
+          "samples": 367
+        },
+        "after-stop": {
+          "peak_used_gib": 4.0,
+          "min_available_gib": 117.6,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 16.26,
+          "temp_max_c": 66.0,
+          "samples": 1
+        }
+      }
+    }
+  },
+  "perf_grid": [
+    {
+      "depth": 65536,
+      "concurrency": 1,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 684.9754547352577,
+      "pp_req_tok_s": 684.9754547352577,
+      "tg_tok_s": 69.42917853981037,
+      "tg_req_tok_s": 69.42917853981037,
+      "ttfr_ms": 2992.7185560033345,
+      "e2e_ttft_ms": 2992.7185560033345
+    },
+    {
+      "depth": 65536,
+      "concurrency": 2,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 748.4260762296661,
+      "pp_req_tok_s": 376.4106064982274,
+      "tg_tok_s": 90.55106729125585,
+      "tg_req_tok_s": 47.388132133552155,
+      "ttfr_ms": 5443.507930651928,
+      "e2e_ttft_ms": 5444.869848162246
+    },
+    {
+      "depth": 65536,
+      "concurrency": 4,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 75.20343771957596,
+      "pp_req_tok_s": 43.46668808127251,
+      "tg_tok_s": 6.58865769875347,
+      "tg_req_tok_s": 17.569901605461386,
+      "ttfr_ms": 69223.00844514393,
+      "e2e_ttft_ms": 69225.6258794029
+    },
+    {
+      "depth": 259840,
+      "concurrency": 1,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 455.01228272150524,
+      "pp_req_tok_s": 455.01228272150524,
+      "tg_tok_s": 60.57259942822545,
+      "tg_req_tok_s": 60.57259942822545,
+      "ttfr_ms": 4502.877573366277,
+      "e2e_ttft_ms": 4518.377612694167
+    },
+    {
+      "depth": 259840,
+      "concurrency": 2,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 17.372920725511776,
+      "pp_req_tok_s": 84.2363763239123,
+      "tg_tok_s": 1.5362986736946507,
+      "tg_req_tok_s": 60.90050621526311,
+      "ttfr_ms": 181642.29861146305,
+      "e2e_ttft_ms": 181655.74702445883
+    },
+    {
+      "depth": 259840,
+      "concurrency": 4,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 14.62118122060145,
+      "pp_req_tok_s": 44.61960796257509,
+      "tg_tok_s": 1.0307691267004246,
+      "tg_req_tok_s": 59.08750597510693,
+      "ttfr_ms": 336841.74239617033,
+      "e2e_ttft_ms": 336857.023090842
+    }
+  ],
+  "perf_overview": {
+    "columns": [
+      "c1",
+      "c2",
+      "c4"
+    ],
+    "rows": [
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "69.4",
+          "c2": "90.6",
+          "c4": "6.6"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "60.6",
+          "c2": "1.5",
+          "c4": "1.0"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "69.4",
+          "c2": "47.4",
+          "c4": "17.6"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "60.6",
+          "c2": "60.9",
+          "c4": "59.1"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "685",
+          "c2": "748",
+          "c4": "75"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "455",
+          "c2": "17",
+          "c4": "15"
+        }
+      }
+    ]
+  },
+  "tools": {
+    "final_score": 93,
+    "rating": "\u2605\u2605\u2605\u2605\u2605 Excellent",
+    "deployability": 80,
+    "responsiveness": 50,
+    "points": 178,
+    "max_points": 192,
+    "scenarios": 97,
+    "version": "2.8.0",
+    "pass": 85,
+    "partial": 8,
+    "fail": 4,
+    "trials": 3,
+    "trial_statistics": {
+      "trials": 3,
+      "final_score_mean": 91,
+      "final_score_stddev": 2.0,
+      "final_score_median": 91.0,
+      "final_score_ci95": [
+        89.0,
+        93.0
+      ],
+      "total_points_mean": 174,
+      "total_points_stddev": 4.0,
+      "pass_at_k": 93.8,
+      "pass_hat_k": 78.1,
+      "reliability_gap": 15.7,
+      "per_category": {
+        "A": {
+          "label": "Tool Selection",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "B": {
+          "label": "Parameter Precision",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "C": {
+          "label": "Multi-Step Chains",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "D": {
+          "label": "Restraint & Refusal",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "E": {
+          "label": "Error Recovery",
+          "mean_percent": 83,
+          "stddev_percent": 0.0
+        },
+        "F": {
+          "label": "Localization",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "G": {
+          "label": "Structured Reasoning",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "H": {
+          "label": "Instruction Following",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "I": {
+          "label": "Context & State",
+          "mean_percent": 95,
+          "stddev_percent": 5.0
+        },
+        "J": {
+          "label": "Code Patterns",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "K": {
+          "label": "Safety & Boundaries",
+          "mean_percent": 92,
+          "stddev_percent": 4.0
+        },
+        "L": {
+          "label": "Toolset Scale",
+          "mean_percent": 96,
+          "stddev_percent": 6.9
+        },
+        "M": {
+          "label": "Autonomous Planning",
+          "mean_percent": 83.3,
+          "stddev_percent": 16.5
+        },
+        "N": {
+          "label": "Creative Composition",
+          "mean_percent": 88.7,
+          "stddev_percent": 9.8
+        },
+        "O": {
+          "label": "Structured Output",
+          "mean_percent": 83,
+          "stddev_percent": 0.0
+        },
+        "P": {
+          "label": "Hard Mode",
+          "mean_percent": 82.3,
+          "stddev_percent": 6.4
+        }
+      }
+    }
+  }
+}

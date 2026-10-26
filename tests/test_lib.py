@@ -166,6 +166,13 @@ class TestMerge(unittest.TestCase):
 
 
 class TestSanitize(unittest.TestCase):
+    def test_sanitize_keeps_numeric_token_counts(self):
+        s = lib.sanitize_text('{"kv_tokens": 328932, "tokens_per_request": 262144, "total_tokens": 1,234.5}\napi_key=abcdef123456')
+        self.assertIn('"kv_tokens": 328932,', s)
+        self.assertIn('"tokens_per_request": 262144,', s)
+        self.assertIn("api_key=<redacted>", s)
+        __import__("json").loads(lib.sanitize_text(lib.jdump({"kv_tokens": 328932, "secret": "abcdefgh"})))
+
     def test_sanitize(self):
         s = lib.sanitize_text("path /home/ryanb/x host dgx01.ff.lan ip 192.168.1.5 10.0.0.1 pub 8.8.8.8 "
                               "key -i /home/ryanb/.ssh/id_ed25519 Authorization: Bearer abcdefghij123 "
