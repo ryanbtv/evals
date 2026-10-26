@@ -1,0 +1,50 @@
+[2026-10-25T22:16:14+00:00] [setup] run 20261025T172000Z--radixark_qwen3.8-27b-nvfp4/rerun-20261025T221614Z recipe=~/recipes/RadixArk_Qwen3.8-27B-NVFP4.yml smoke=False dry_run=False
+[2026-10-25T22:16:15+00:00] [preflight] stopped sparkrun-proxy.service at 2026-10-25T22:16:15+00:00: ok (inactive=True)
+[2026-10-25T22:16:15+00:00] [preflight] nothing to stop
+[2026-10-25T22:16:15+00:00] [performance] benchmark llama-benchy skip_run=False args={"pp": [2048], "tg": [128], "depth": [259840], "concurrency": [1, 2, 4], "runs": 3, "prefix_caching": true}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[2026-10-25T22:16:17+00:00] [performance] banner: ============================================================
+[2026-10-25T22:16:17+00:00] [performance] banner: sparkrun v0.4.1 — benchmark
+[2026-10-25T22:16:17+00:00] [performance] banner: ============================================================
+[2026-10-25T22:16:17+00:00] [performance] banner: Recipe:                ~/recipes/RadixArk_Qwen3.8-27B-NVFP4.yml
+[2026-10-25T22:16:17+00:00] [performance] banner: Model:                 RadixArk/Qwen3.8-27B-NVFP4
+[2026-10-25T22:16:17+00:00] [performance] banner: Served as:             qwen3.8-27b
+[2026-10-25T22:16:17+00:00] [performance] banner: Runtime:               sglang
+[2026-10-25T22:16:17+00:00] [performance] banner: Declared image:        lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
+[2026-10-25T22:16:17+00:00] [performance] banner: Benchmark Framework:   llama-benchy
+[2026-10-25T22:16:17+00:00] [performance] banner: Hosts:                 localhost
+[2026-10-25T22:16:17+00:00] [performance] banner: Mode:                  solo
+[2026-10-25T22:16:17+00:00] [performance] banner: 
+[2026-10-25T22:16:17+00:00] [performance] banner: Benchmark args:
+[2026-10-25T22:16:17+00:00] [performance] banner:   pp:                                 [2048]
+[2026-10-25T22:16:17+00:00] [performance] banner:   depth:                              [259840]
+[2026-10-25T22:16:17+00:00] [performance] banner:   prefix_caching:                     True
+[2026-10-25T22:16:17+00:00] [performance] banner:   tg:                                 [128]
+[2026-10-25T22:16:17+00:00] [performance] banner:   concurrency:                        [1, 2, 4]
+[2026-10-25T22:16:17+00:00] [performance] banner:   runs:                               3
+[2026-10-25T22:16:17+00:00] [performance] banner:   served_model_name:                  qwen3.8-27b
+[2026-10-25T22:16:17+00:00] [performance] banner:   extra_body:                         return_token_ids=false
+[2026-10-25T22:16:17+00:00] [performance] banner: ============================================================
+[2026-10-25T22:16:17+00:00] [performance] banner: 
+[2026-10-25T22:16:17+00:00] [performance] info: Benchmark ID:          bench_01ca8d34ba60
+[2026-10-25T22:16:17+00:00] [performance] info: State directory:       ~/.cache/sparkrun/benchmarks/bench_01ca8d34ba60
+[2026-10-25T22:16:17+00:00] [performance] info: 
+[2026-10-25T22:16:17+00:00] [performance] info: Pinned llama-benchy version: 0.4.0
+[2026-10-25T22:16:31+00:00] [performance] info: 
+[2026-10-25T22:16:31+00:00] [performance] info: Pinned image SHA: sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
+[2026-10-25T22:23:53+00:00] [performance] info: 
+[2026-10-25T22:23:53+00:00] [performance] schedule_started: RadixArk_Qwen3.8-27B-NVFP4
+[2026-10-25T22:23:53+00:00] [performance] task 0 start: d=259840 c=1
+[2026-10-25T22:51:40+00:00] [performance] task 0 end: success=True 1667.7574578969507s
+[2026-10-25T22:51:40+00:00] [performance] task 1 start: d=259840 c=2
+[2026-10-25T23:57:27+00:00] [performance] task 1 end: success=True 3946.1956632139627s
+[2026-10-25T23:57:27+00:00] [performance] task 2 start: d=259840 c=4
+[2026-10-26T02:27:05+00:00] [performance] task 2 end: success=True 8977.990399437025s
+[2026-10-26T02:27:05+00:00] [performance] schedule_finished: 
+[2026-10-26T02:27:05+00:00] [performance] info: Results saved to: ~/evals/raw-runs/20261025T172000Z--radixark_qwen3.8-27b-nvfp4/rerun-20261025T221614Z/perf.yaml
+[2026-10-26T02:27:05+00:00] [performance] info: JSON output: ~/evals/raw-runs/20261025T172000Z--radixark_qwen3.8-27b-nvfp4/rerun-20261025T221614Z/perf.json
+[2026-10-26T02:27:05+00:00] [performance] info: CSV output: ~/evals/raw-runs/20261025T172000Z--radixark_qwen3.8-27b-nvfp4/rerun-20261025T221614Z/perf.csv
+[2026-10-26T02:27:05+00:00] [performance] phase performance: ok in 15049.9s 
+[2026-10-26T02:27:05+00:00] [teardown] stopping inference via sparkrun.api.stop({'workload_id': 'sparkrun_1a565e149fce1c82_f1e10129bb2c'})
+[2026-10-26T02:27:07+00:00] [teardown] stop result: StopResult(workload_id='sparkrun_1a565e149fce1c82_f1e10129bb2c', hosts_targeted=('localhost',), containers_removed=1, errors=(), hosts_failed=(), dry_run=False)
+[2026-10-26T02:27:07+00:00] [teardown] started sparkrun-proxy.service at 2026-10-26T02:27:07+00:00: ok (active=True)

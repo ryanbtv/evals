@@ -1,0 +1,47 @@
+recipe_version: "2"
+model: RadixArk/Qwen3.8-27B-NVFP4
+runtime: sglang
+container: lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1
+
+max_nodes: 1
+
+metadata:
+  model_dtype: nvfp4
+  description: Qwen3.8-27B NVFP4 (RadixArk) + DSpark — SGLang on DGX Spark
+
+defaults:
+  port: 8000
+  host: 0.0.0.0
+  tensor_parallel: 1
+  gpu_memory_utilization: 0.50
+  served_model_name: qwen3.8-27b
+  attention_backend: flashinfer
+  speculative_algorithm: DSPARK
+  speculative_draft_model_path: RadixArk/Qwen3.8-27B-DSpark
+  speculative_dspark_block_size: 7
+  speculative_draft_model_quantization: unquant
+  mm_feature_transport: cpu
+
+command: |
+  python3 -m sglang.launch_server \
+    --trust-remote-code \
+    --model-path {model} \
+    --tp-size {tensor_parallel} \
+    --served-model-name {served_model_name} \
+    --mem-fraction-static {gpu_memory_utilization} \
+    --attention-backend {attention_backend} \
+    --chunked-prefill-size 8192 \
+    --disable-prefill-cuda-graph \
+    --cuda-graph-max-bs-decode 4 \
+    --speculative-algorithm {speculative_algorithm} \
+    --speculative-draft-model-path {speculative_draft_model_path} \
+    --speculative-dspark-block-size {speculative_dspark_block_size} \
+    --speculative-draft-model-quantization {speculative_draft_model_quantization} \
+    --mamba-radix-cache-strategy extra_buffer \
+    --mm-feature-transport {mm_feature_transport} \
+    --enable-torch-compile --torch-compile-max-bs 4 \
+    --num-continuous-decode-steps 2 \
+    --reasoning-parser qwen3 \
+    --tool-call-parser qwen3_coder \
+    --host {host} \
+    --port {port}

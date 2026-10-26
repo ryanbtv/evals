@@ -1,0 +1,151 @@
+{
+  "hostname_class": "NVIDIA DGX Spark",
+  "gpu": "NVIDIA GB10, 580.178.04, [N/A], 12.1",
+  "driver": "580.178.04",
+  "cuda": "13.0",
+  "cpu_arch": "aarch64",
+  "cpu_model": "Model name:                              Cortex-A725\nModel name:                              Cortex-X925",
+  "memory": "total        used        free      shared  buff/cache   available\nMem:           121Gi       4.3Gi        92Gi        20Mi        26Gi       117Gi\nSwap:             0B          0B          0B",
+  "os": "Ubuntu 26.04.1 LTS",
+  "kernel": "7.0.0-1018-nvidia",
+  "docker": "29.9.1",
+  "python": "3.14.4",
+  "sparkrun_version": "0.4.1",
+  "harness_commit": "b6d55cebb06999aafc86a1c4715538d7dc12fa95",
+  "config": {
+    "harness_version": 2,
+    "target": {
+      "solo": true,
+      "cluster": null,
+      "health_timeout_s": 10
+    },
+    "preflight": {
+      "keep_containers": [
+        "caddy",
+        "bifrost",
+        "dockhand",
+        "dockhand-postgres"
+      ],
+      "systemd_units": [
+        "dgx-model-stacks.service"
+      ],
+      "proxy_unit": "sparkrun-proxy.service"
+    },
+    "performance": {
+      "framework": "llama-benchy",
+      "bench_args": {
+        "pp": [
+          2048
+        ],
+        "tg": [
+          128
+        ],
+        "depth": [
+          259840
+        ],
+        "concurrency": [
+          1,
+          2,
+          4
+        ],
+        "runs": 3,
+        "prefix_caching": true
+      },
+      "timeout_s": 14400
+    },
+    "tools": {
+      "framework": "tool-eval-bench",
+      "bench_args": {
+        "ref": "v2.8.0",
+        "trials": 3,
+        "hardmode": true,
+        "temperature": 0.0
+      },
+      "timeout_s": 21600
+    },
+    "smoke": false,
+    "rerun": {
+      "depth": 259840,
+      "merge_into": "20261025T172000Z--radixark_qwen3.8-27b-nvfp4",
+      "replaces": null
+    }
+  },
+  "run_id": "20261025T172000Z--radixark_qwen3.8-27b-nvfp4/rerun-20261025T221614Z",
+  "framework_versions": {
+    "tool-eval-bench": "v2.8.0",
+    "llama-benchy": "0.4.0"
+  },
+  "preflight": {
+    "sparkrun_workloads": [],
+    "systemd_units": [],
+    "containers": [],
+    "errors": []
+  },
+  "proxy": {
+    "unit": "sparkrun-proxy.service",
+    "was_active": true,
+    "stopped_at": "2026-10-25T22:16:15+00:00",
+    "started_at": "2026-10-26T02:27:07+00:00",
+    "stop_result": "ok",
+    "start_result": "ok",
+    "active_after_restart": true
+  },
+  "container": {
+    "container_image": "lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1",
+    "container_image_sha": "sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1",
+    "container_image_sha_pinned": true,
+    "host_list": [
+      "localhost"
+    ]
+  },
+  "perf_metadata": {
+    "framework": "llama-benchy",
+    "profile": null,
+    "bench_args": {
+      "pp": [
+        2048
+      ],
+      "depth": [
+        259840
+      ],
+      "prefix_caching": true,
+      "tg": [
+        128
+      ],
+      "concurrency": [
+        1,
+        2,
+        4
+      ],
+      "runs": 3,
+      "served_model_name": "qwen3.8-27b",
+      "extra_body": "return_token_ids=false"
+    },
+    "timing": {
+      "startup": {
+        "format": 1,
+        "measurement": "sparkrun-rank0-v1",
+        "observer": "rank0",
+        "start_boundary": "docker.State.StartedAt",
+        "executor": "docker",
+        "observer_location": "rank0-host",
+        "inference_style": "openai-chat-stream-v1",
+        "ttft_status": "measured",
+        "inference_requested": true,
+        "inference_ready": true,
+        "ttr_port_open_s": 446.79343,
+        "ttr_http_ready_s": 451.191174,
+        "ttft_s": 451.345005,
+        "observer_start_delay_s": 10.326799,
+        "first_token_field": "<redacted>",
+        "response_validated": false,
+        "http_ready_path": "/health",
+        "prompt_sha256": "9e49e6e9b25b4b7f3578c08c7761a92e8596dcd26eba9f2f89ee304fc560831e",
+        "max_tokens": 64,
+        "temperature": 0,
+        "request_ttft_s": 0.15363806497771293
+      }
+    }
+  },
+  "server_stopped": true
+}

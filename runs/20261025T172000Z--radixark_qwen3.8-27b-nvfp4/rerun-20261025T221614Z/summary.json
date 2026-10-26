@@ -1,0 +1,65 @@
+{
+  "run_id": "20261025T172000Z--radixark_qwen3.8-27b-nvfp4/rerun-20261025T221614Z",
+  "model": "qwen3.8-27b",
+  "recipe_name": "RadixArk_Qwen3.8-27B-NVFP4.yml",
+  "smoke": false,
+  "dry_run": false,
+  "phases": {
+    "performance": {
+      "status": "ok",
+      "started_at": "2026-10-25T22:16:15+00:00",
+      "error": null,
+      "duration_s": 15049.9,
+      "ended_at": "2026-10-26T02:27:05+00:00"
+    }
+  },
+  "container_image": "lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1",
+  "sparkrun_version": "0.4.1",
+  "harness_commit": "b6d55cebb06999aafc86a1c4715538d7dc12fa95",
+  "server_reuse": {
+    "launches": 1,
+    "skip_run_calls": 0,
+    "skip_run_ok": 0
+  },
+  "perf_grid": [
+    {
+      "depth": 259840,
+      "concurrency": 1,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 101.16990362012062,
+      "pp_req_tok_s": 101.16990362012062,
+      "tg_tok_s": 15.436652340834057,
+      "tg_req_tok_s": 15.436652340834057,
+      "ttfr_ms": 20247.581593343057,
+      "e2e_ttft_ms": 20247.581593343057
+    },
+    {
+      "depth": 259840,
+      "concurrency": 2,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 8.38995735944649,
+      "pp_req_tok_s": 37.129402615856655,
+      "tg_tok_s": 0.6356357420211435,
+      "tg_req_tok_s": 16.21783006002275,
+      "ttfr_ms": 337462.623123681,
+      "e2e_ttft_ms": 337462.623123681
+    },
+    {
+      "depth": 259840,
+      "concurrency": 4,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 5.79594855194387,
+      "pp_req_tok_s": 11.050607516036491,
+      "tg_tok_s": 0.43030005773542573,
+      "tg_req_tok_s": 17.19332567952502,
+      "ttfr_ms": 849672.6176889302,
+      "e2e_ttft_ms": 849672.6176889302
+    }
+  ]
+}

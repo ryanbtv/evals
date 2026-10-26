@@ -6,9 +6,9 @@
   "dry_run": false,
   "phases": {
     "performance": {
-      "status": "partial",
+      "status": "ok",
       "started_at": "2026-10-25T17:20:00+00:00",
-      "error": "cells: d259968c1:partial, d259968c2:4 failed requests, d259968c4:9 failed requests",
+      "error": null,
       "duration_s": 10977.6,
       "ended_at": "2026-10-25T20:22:58+00:00"
     },
@@ -18,6 +18,13 @@
       "error": null,
       "duration_s": 6393.5,
       "ended_at": "2026-10-25T22:09:31+00:00"
+    },
+    "performance (rerun-20261025T221614Z, depth 259840)": {
+      "status": "ok",
+      "started_at": "2026-10-25T22:16:15+00:00",
+      "error": null,
+      "duration_s": 15049.9,
+      "ended_at": "2026-10-26T02:27:05+00:00"
     }
   },
   "container_image": "lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1",
@@ -69,70 +76,43 @@
       "e2e_ttft_ms": 60303.63632631876
     },
     {
-      "depth": 259968,
+      "depth": 259840,
       "concurrency": 1,
-      "status": "partial",
-      "ok": false,
-      "ctx_only": true,
-      "pp_tok_s": 689.6298669908615,
-      "pp_req_tok_s": 689.6298669908615,
-      "tg_tok_s": 15.813293355339107,
-      "tg_req_tok_s": 15.813293355339107,
-      "ttfr_ms": 376974.38004401437,
-      "e2e_ttft_ms": 376974.38004401437,
-      "request_errors": {
-        "count": 3,
-        "by_status": {
-          "400": 3
-        },
-        "examples": {
-          "400": "{\"object\":\"error\",\"message\":\"Requested token count exceeds the model's maximum context length of 262144 tokens. You requested a total of 262145 tokens: <redacted> tokens from the input messages and 128 tokens for the completion. Please reduce the number of tokens in the input messages or the completion "
-        }
-      }
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 101.16990362012062,
+      "pp_req_tok_s": 101.16990362012062,
+      "tg_tok_s": 15.436652340834057,
+      "tg_req_tok_s": 15.436652340834057,
+      "ttfr_ms": 20247.581593343057,
+      "e2e_ttft_ms": 20247.581593343057
     },
     {
-      "depth": 259968,
+      "depth": 259840,
       "concurrency": 2,
       "status": "ok",
       "ok": true,
       "ctx_only": false,
-      "pp_tok_s": 98.28461737482733,
-      "pp_req_tok_s": 98.30470231140683,
-      "tg_tok_s": 18.892433568120488,
-      "tg_req_tok_s": 18.892433568120488,
-      "ttfr_ms": 20849.382250977214,
-      "e2e_ttft_ms": 20849.382250977214,
-      "request_errors": {
-        "count": 4,
-        "by_status": {
-          "400": 4
-        },
-        "examples": {
-          "400": "{\"object\":\"error\",\"message\":\"Requested token count exceeds the model's maximum context length of 262144 tokens. You requested a total of 262146 tokens: <redacted> tokens from the input messages and 128 tokens for the completion. Please reduce the number of tokens in the input messages or the completion "
-        }
-      }
+      "pp_tok_s": 8.38995735944649,
+      "pp_req_tok_s": 37.129402615856655,
+      "tg_tok_s": 0.6356357420211435,
+      "tg_req_tok_s": 16.21783006002275,
+      "ttfr_ms": 337462.623123681,
+      "e2e_ttft_ms": 337462.623123681
     },
     {
-      "depth": 259968,
+      "depth": 259840,
       "concurrency": 4,
       "status": "ok",
       "ok": true,
       "ctx_only": false,
-      "pp_tok_s": 46.65749614477176,
-      "pp_req_tok_s": 32.00836679585644,
-      "tg_tok_s": 7.617259945225385,
-      "tg_req_tok_s": 14.891478683614979,
-      "ttfr_ms": 392318.38188398007,
-      "e2e_ttft_ms": 392318.38188398007,
-      "request_errors": {
-        "count": 9,
-        "by_status": {
-          "400": 9
-        },
-        "examples": {
-          "400": "{\"object\":\"error\",\"message\":\"Requested token count exceeds the model's maximum context length of 262144 tokens. You requested a total of 262146 tokens: <redacted> tokens from the input messages and 128 tokens for the completion. Please reduce the number of tokens in the input messages or the completion "
-        }
-      }
+      "pp_tok_s": 5.79594855194387,
+      "pp_req_tok_s": 11.050607516036491,
+      "tg_tok_s": 0.43030005773542573,
+      "tg_req_tok_s": 17.19332567952502,
+      "ttfr_ms": 849672.6176889302,
+      "e2e_ttft_ms": 849672.6176889302
     }
   ],
   "tools": {
@@ -246,5 +226,46 @@
       }
     }
   },
-  "resummarized_with": "58ba17a9ec04ca573ccbee86daa79cd761308075"
+  "resummarized_with": "58ba17a9ec04ca573ccbee86daa79cd761308075",
+  "perf_depths": [
+    65536,
+    259840
+  ],
+  "notes": [
+    "Depth 259840 was re-run on 2026-10-26T02:27:07+00:00 with `--rerun-perf-depth` (rerun-20261025T221614Z/) and merged here. It replaces depth(s) [259968]; their raw data is kept under superseded/."
+  ],
+  "reruns": [
+    {
+      "dir": "rerun-20261025T221614Z",
+      "depth": 259840,
+      "replaces": [
+        259968
+      ],
+      "harness_commit": "b6d55cebb06999aafc86a1c4715538d7dc12fa95",
+      "phase": {
+        "status": "ok",
+        "started_at": "2026-10-25T22:16:15+00:00",
+        "error": null,
+        "duration_s": 15049.9,
+        "ended_at": "2026-10-26T02:27:05+00:00"
+      },
+      "proxy": {
+        "unit": "sparkrun-proxy.service",
+        "was_active": true,
+        "stopped_at": "2026-10-25T22:16:15+00:00",
+        "started_at": "2026-10-26T02:27:07+00:00",
+        "stop_result": "ok",
+        "start_result": "ok",
+        "active_after_restart": true
+      },
+      "container": {
+        "container_image": "lmsysorg/sglang@sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1",
+        "container_image_sha": "sha256:febfb971c7352570fc445c466ebd6ffc9d896024958e544a60f2137fd85856b1",
+        "container_image_sha_pinned": true,
+        "host_list": [
+          "localhost"
+        ]
+      }
+    }
+  ]
 }
