@@ -1,0 +1,164 @@
+{
+  "hostname_class": "NVIDIA DGX Spark",
+  "gpu": "NVIDIA GB10, 580.178.04, [N/A], 12.1",
+  "driver": "580.178.04",
+  "cuda": "13.0",
+  "cpu_arch": "aarch64",
+  "cpu_model": "Model name:                              Cortex-A725\nModel name:                              Cortex-X925",
+  "memory": "total        used        free      shared  buff/cache   available\nMem:           121Gi       4.1Gi       116Gi        20Mi       2.9Gi       117Gi\nSwap:             0B          0B          0B",
+  "os": "Ubuntu 26.04.1 LTS",
+  "kernel": "7.0.0-1018-nvidia",
+  "docker": "29.9.1",
+  "python": "3.14.4",
+  "sparkrun_version": "0.4.1",
+  "harness_commit": "291f18a9b507218342077c38169c1d68de70466c",
+  "config": {
+    "harness_version": 2,
+    "target": {
+      "solo": true,
+      "cluster": null,
+      "health_timeout_s": 10
+    },
+    "preflight": {
+      "keep_containers": [
+        "caddy",
+        "bifrost",
+        "dockhand",
+        "dockhand-postgres"
+      ],
+      "systemd_units": [
+        "dgx-model-stacks.service"
+      ],
+      "proxy_unit": "sparkrun-proxy.service"
+    },
+    "performance": {
+      "framework": "llama-benchy",
+      "bench_args": {
+        "pp": [
+          2048
+        ],
+        "tg": [
+          128
+        ],
+        "depth": [
+          65536,
+          259840
+        ],
+        "concurrency": [
+          1,
+          2,
+          4
+        ],
+        "runs": 3,
+        "prefix_caching": true
+      },
+      "timeout_s": 14400
+    },
+    "tools": {
+      "framework": "tool-eval-bench",
+      "bench_args": {
+        "ref": "v2.8.0",
+        "trials": 3,
+        "hardmode": true,
+        "temperature": 0.0
+      },
+      "timeout_s": 21600
+    },
+    "resources": {
+      "interval_s": 10,
+      "baseline_samples": 3
+    },
+    "smoke": false
+  },
+  "run_id": "20261029T232042Z--qwen3.8-flash-next-fp4-local",
+  "framework_versions": {
+    "tool-eval-bench": "2.8.0",
+    "llama-benchy": "0.4.0"
+  },
+  "preflight": {
+    "sparkrun_workloads": [],
+    "systemd_units": [],
+    "containers": [],
+    "errors": []
+  },
+  "proxy": {
+    "unit": "sparkrun-proxy.service",
+    "was_active": false,
+    "stopped_at": null,
+    "started_at": null,
+    "stop_result": null,
+    "start_result": null,
+    "active_after_restart": null
+  },
+  "container": {
+    "container_image": "eugr/spark-vllm-b12x@sha256:57c24fc397c66d4d28a7d0d5f1d792934fd01a70f4574cff6315fb7bc329d5cb",
+    "container_image_sha": "sha256:57c24fc397c66d4d28a7d0d5f1d792934fd01a70f4574cff6315fb7bc329d5cb",
+    "container_image_sha_pinned": true,
+    "host_list": [
+      "localhost"
+    ]
+  },
+  "perf_metadata": {
+    "framework": "llama-benchy",
+    "profile": null,
+    "bench_args": {
+      "pp": [
+        2048
+      ],
+      "depth": [
+        65536,
+        259840
+      ],
+      "prefix_caching": true,
+      "tg": [
+        128
+      ],
+      "concurrency": [
+        1,
+        2,
+        4
+      ],
+      "runs": 3,
+      "served_model_name": "Qwen3.8-Flash-Next-FP4-Local"
+    },
+    "timing": {
+      "startup": {
+        "format": 1,
+        "measurement": "sparkrun-rank0-v1",
+        "observer": "rank0",
+        "start_boundary": "docker.State.StartedAt",
+        "executor": "docker",
+        "observer_location": "rank0-host",
+        "inference_style": "openai-chat-stream-v1",
+        "ttft_status": "measured",
+        "inference_requested": true,
+        "inference_ready": true,
+        "ttr_port_open_s": 287.396012,
+        "ttr_http_ready_s": 287.411288,
+        "ttft_s": 287.701377,
+        "observer_start_delay_s": 10.6913,
+        "first_token_field": "<redacted>",
+        "response_validated": false,
+        "http_ready_path": "/health",
+        "prompt_sha256": "9e49e6e9b25b4b7f3578c08c7761a92e8596dcd26eba9f2f89ee304fc560831e",
+        "max_tokens": 64,
+        "temperature": 0,
+        "request_ttft_s": 0.28996186098083854
+      }
+    }
+  },
+  "tools_metadata": {
+    "framework": "tool-eval-bench",
+    "profile": null,
+    "bench_args": {
+      "ref": "v2.8.0",
+      "parallel": 1,
+      "timeout": 120,
+      "max_turns": 8,
+      "temperature": 0.0,
+      "trials": 3,
+      "hardmode": true
+    }
+  },
+  "server_stopped": true
+}

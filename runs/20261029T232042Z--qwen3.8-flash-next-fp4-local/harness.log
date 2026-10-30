@@ -1,0 +1,91 @@
+[2026-10-29T23:20:42+00:00] [setup] run 20261029T232042Z--qwen3.8-flash-next-fp4-local recipe=~/evals/recipes/Qwen3.8-Flash-Next-FP4-Local/Qwen3.8-Flash-Next-FP4-Local.yml smoke=False dry_run=False
+[2026-10-29T23:20:43+00:00] [preflight] sparkrun-proxy.service not active; leaving it alone
+[2026-10-29T23:20:43+00:00] [preflight] nothing to stop
+[2026-10-29T23:20:47+00:00] [preflight] resource sampler started (10.0s) -> resources.jsonl
+[2026-10-29T23:20:47+00:00] [performance] benchmark llama-benchy skip_run=False args={"pp": [2048], "tg": [128], "depth": [65536, 259840], "concurrency": [1, 2, 4], "runs": 3, "prefix_caching": true}
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[2026-10-29T23:20:49+00:00] [performance] banner: ============================================================
+[2026-10-29T23:20:49+00:00] [performance] banner: sparkrun v0.4.1 — benchmark
+[2026-10-29T23:20:49+00:00] [performance] banner: ============================================================
+[2026-10-29T23:20:49+00:00] [performance] banner: Recipe:                ~/evals/recipes/Qwen3.8-Flash-Next-FP4-Local/Qwen3.8-Flash-Next-FP4-Local.yml
+[2026-10-29T23:20:49+00:00] [performance] banner: Model:                 nvidia/Qwen3.8-Flash-Next-FP4-Local
+[2026-10-29T23:20:49+00:00] [performance] banner: Served as:             Qwen3.8-Flash-Next-FP4-Local
+[2026-10-29T23:20:49+00:00] [performance] banner: Runtime:               vllm-distributed
+[2026-10-29T23:20:49+00:00] [performance] banner: Declared image:        eugr/spark-vllm-b12x@sha256:57c24fc397c66d4d28a7d0d5f1d792934fd01a70f4574cff6315fb7bc329d5cb
+[2026-10-29T23:20:49+00:00] [performance] banner: Benchmark Framework:   llama-benchy
+[2026-10-29T23:20:49+00:00] [performance] banner: Hosts:                 localhost
+[2026-10-29T23:20:49+00:00] [performance] banner: Mode:                  solo
+[2026-10-29T23:20:49+00:00] [performance] banner: 
+[2026-10-29T23:20:49+00:00] [performance] banner: Benchmark args:
+[2026-10-29T23:20:49+00:00] [performance] banner:   pp:                                 [2048]
+[2026-10-29T23:20:49+00:00] [performance] banner:   depth:                              [65536, 259840]
+[2026-10-29T23:20:49+00:00] [performance] banner:   prefix_caching:                     True
+[2026-10-29T23:20:49+00:00] [performance] banner:   tg:                                 [128]
+[2026-10-29T23:20:49+00:00] [performance] banner:   concurrency:                        [1, 2, 4]
+[2026-10-29T23:20:49+00:00] [performance] banner:   runs:                               3
+[2026-10-29T23:20:49+00:00] [performance] banner:   served_model_name:                  Qwen3.8-Flash-Next-FP4-Local
+[2026-10-29T23:20:49+00:00] [performance] banner: ============================================================
+[2026-10-29T23:20:49+00:00] [performance] banner: 
+[2026-10-29T23:20:49+00:00] [performance] info: Benchmark ID:          bench_27da11612f6b
+[2026-10-29T23:20:49+00:00] [performance] info: State directory:       ~/.cache/sparkrun/benchmarks/bench_27da11612f6b
+[2026-10-29T23:20:49+00:00] [performance] info: 
+[2026-10-29T23:20:51+00:00] [performance] info: Pinned llama-benchy version: 0.4.0
+[2026-10-29T23:21:04+00:00] [performance] info: 
+[2026-10-29T23:21:04+00:00] [performance] info: Pinned image SHA: sha256:57c24fc397c66d4d28a7d0d5f1d792934fd01a70f4574cff6315fb7bc329d5cb
+[2026-10-29T23:25:42+00:00] [performance] info: 
+[2026-10-29T23:25:42+00:00] [performance] schedule_started: Qwen3.8-Flash-Next-FP4-Local
+[2026-10-29T23:25:42+00:00] [performance] task 0 start: d=65536 c=1
+[2026-10-29T23:28:16+00:00] [performance] task 0 end: success=True 154.60652200400364s
+[2026-10-29T23:28:16+00:00] [performance] task 1 start: d=65536 c=2
+[2026-10-29T23:31:58+00:00] [performance] task 1 end: success=True 221.68747212702874s
+[2026-10-29T23:31:58+00:00] [performance] task 2 start: d=65536 c=4
+[2026-10-29T23:39:08+00:00] [performance] task 2 end: success=True 429.9403564300155s
+[2026-10-29T23:39:08+00:00] [performance] task 3 start: d=259840 c=1
+[2026-10-29T23:46:04+00:00] [performance] task 3 end: success=True 416.17876250995323s
+[2026-10-29T23:46:04+00:00] [performance] task 4 start: d=259840 c=2
+[2026-10-29T23:59:42+00:00] [performance] task 4 end: success=True 817.2949180360883s
+[2026-10-29T23:59:42+00:00] [performance] task 5 start: d=259840 c=4
+[2026-10-30T00:33:14+00:00] [performance] task 5 end: success=True 2012.2025492800167s
+[2026-10-30T00:33:14+00:00] [performance] schedule_finished: 
+[2026-10-30T00:33:14+00:00] [performance] info: Results saved to: ~/evals/raw-runs/20261029T232042Z--qwen3.8-flash-next-fp4-local/perf.yaml
+[2026-10-30T00:33:14+00:00] [performance] info: JSON output: ~/evals/raw-runs/20261029T232042Z--qwen3.8-flash-next-fp4-local/perf.json
+[2026-10-30T00:33:14+00:00] [performance] info: CSV output: ~/evals/raw-runs/20261029T232042Z--qwen3.8-flash-next-fp4-local/perf.csv
+[2026-10-30T00:33:15+00:00] [performance] phase performance: ok in 4348.1s 
+[2026-10-30T00:33:15+00:00] [tools] benchmark tool-eval-bench skip_run=True args={"ref": "v2.8.0", "trials": 3, "hardmode": true, "temperature": 0.0}
+[2026-10-30T00:33:15+00:00] [tools] banner: ============================================================
+[2026-10-30T00:33:15+00:00] [tools] banner: sparkrun v0.4.1 — benchmark
+[2026-10-30T00:33:15+00:00] [tools] banner: ============================================================
+[2026-10-30T00:33:15+00:00] [tools] banner: Recipe:                ~/evals/recipes/Qwen3.8-Flash-Next-FP4-Local/Qwen3.8-Flash-Next-FP4-Local.yml
+[2026-10-30T00:33:15+00:00] [tools] banner: Model:                 nvidia/Qwen3.8-Flash-Next-FP4-Local
+[2026-10-30T00:33:15+00:00] [tools] banner: Served as:             Qwen3.8-Flash-Next-FP4-Local
+[2026-10-30T00:33:15+00:00] [tools] banner: Runtime:               vllm-distributed
+[2026-10-30T00:33:15+00:00] [tools] banner: Declared image:        eugr/spark-vllm-b12x@sha256:57c24fc397c66d4d28a7d0d5f1d792934fd01a70f4574cff6315fb7bc329d5cb
+[2026-10-30T00:33:15+00:00] [tools] banner: Benchmark Framework:   tool-eval-bench
+[2026-10-30T00:33:15+00:00] [tools] banner: Hosts:                 localhost
+[2026-10-30T00:33:15+00:00] [tools] banner: Mode:                  solo
+[2026-10-30T00:33:15+00:00] [tools] banner: 
+[2026-10-30T00:33:15+00:00] [tools] banner: Benchmark args:
+[2026-10-30T00:33:15+00:00] [tools] banner:   ref:                                v2.8.0
+[2026-10-30T00:33:15+00:00] [tools] banner:   parallel:                           1
+[2026-10-30T00:33:15+00:00] [tools] banner:   timeout:                            120
+[2026-10-30T00:33:15+00:00] [tools] banner:   max_turns:                          8
+[2026-10-30T00:33:15+00:00] [tools] banner:   temperature:                        0.0
+[2026-10-30T00:33:15+00:00] [tools] banner:   trials:                             3
+[2026-10-30T00:33:15+00:00] [tools] banner:   hardmode:                           True
+[2026-10-30T00:33:15+00:00] [tools] banner: ============================================================
+[2026-10-30T00:33:15+00:00] [tools] banner: 
+[2026-10-30T00:33:15+00:00] [tools] info: Benchmark ID:          bench_73875267bc43
+[2026-10-30T00:33:15+00:00] [tools] info: State directory:       ~/.cache/sparkrun/benchmarks/bench_73875267bc43
+[2026-10-30T00:33:15+00:00] [tools] info: 
+[2026-10-30T00:33:15+00:00] [tools] info: 
+[2026-10-30T00:33:15+00:00] [tools] schedule_started: Qwen3.8-Flash-Next-FP4-Local
+[2026-10-30T00:33:15+00:00] [tools] task 0 start: tool evaluation suite
+[2026-10-30T02:02:02+00:00] [tools] task 0 end: success=True 5326.719498107908s
+[2026-10-30T02:02:02+00:00] [tools] schedule_finished: 
+[2026-10-30T02:02:03+00:00] [tools] info: Results saved to: ~/evals/raw-runs/20261029T232042Z--qwen3.8-flash-next-fp4-local/tools.yaml
+[2026-10-30T02:02:03+00:00] [tools] info: JSON output: ~/evals/raw-runs/20261029T232042Z--qwen3.8-flash-next-fp4-local/tools.json
+[2026-10-30T02:02:03+00:00] [tools] info: CSV output: ~/evals/raw-runs/20261029T232042Z--qwen3.8-flash-next-fp4-local/tools.csv
+[2026-10-30T02:02:04+00:00] [tools] phase tools: ok in 5329.1s 
+[2026-10-30T02:02:04+00:00] [tools] saved server logs of sparkrun_72a529618f4d1120_1e318e9e9b6d_solo
+[2026-10-30T02:02:04+00:00] [teardown] stopping inference via sparkrun.api.stop({'workload_id': 'sparkrun_72a529618f4d1120_1e318e9e9b6d'})
+[2026-10-30T02:02:06+00:00] [teardown] stop result: StopResult(workload_id='sparkrun_72a529618f4d1120_1e318e9e9b6d', hosts_targeted=('localhost',), containers_removed=1, errors=(), hosts_failed=(), dry_run=False)
