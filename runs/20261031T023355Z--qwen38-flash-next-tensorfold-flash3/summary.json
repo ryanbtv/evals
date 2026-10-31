@@ -1,0 +1,259 @@
+{
+  "run_id": "20261031T023355Z--qwen38-flash-next-tensorfold-flash3",
+  "model": "turboderp/Qwen3.8-Flash-Next-exl3",
+  "served_model_name": "Qwen3.8-Flash-Next",
+  "recipe_name": "qwen38-flash-next-tensorfold-flash3.yml",
+  "smoke": false,
+  "dry_run": false,
+  "limitations": [
+    "Performance: 5 of 6 cells completed. The 259840-depth, concurrency-4 cell did not complete: llama-benchy logged three empty `Error during run:` lines (perf-tasks/005_d259840_c4.log) and sparkrun reported `schedule did not complete`. It is shown as n/a. The server stayed up after this cell and served the tool eval.",
+    "Tool calling: no score (n/a). Trial 1 ran from 08:50:56 to 09:57:26 UTC and scored 44 of 97 scenarios (98/100 on those, 86/88 points) before the server went away near TC-45; that partial trial is kept in runs/2026/10/ but is not a valid score. At 09:56:46 UTC the dgx01 kernel's global OOM killer killed the `tensorfold` server process (kernel journal; the serve log ends with `Killed`). Trials 2 and 3 then failed every scenario with connection errors, and the harness's resume attempt failed its pre-flight check with `connection_failed` on :8888 (tools-tasks/000.log).",
+    "Memory: peak use was 115.6 of 121.7 GiB, with a minimum of 6.1 GiB available, under `--parallel 9 --context 262144`. The OOM kill during the tool eval suggests this configuration leaves too little headroom on this host for a full run.",
+    "Recipe: `model_revision: 4.05bpw_h6_ng6` is recorded, but the command never passes `--revision`. The served weights are whatever snapshot is cached (55a732e0c4c3d4614bc42b68493bb930d9b02c0a in the serve log), not a revision the recipe enforces.",
+    "Recipe: it bind-mounts `tool_calls.py` and `tool_trace.py` from a host checkout of github.com/anubhavgupta/Tensorfold-recipies-single-dgx-spark (flash-3/tools/, commit 481854d920a4050a504b4ca8d4bc4fceb2960235). They are not vendored here because that repository has no license; see recipes/qwen38-flash-next-tensorfold-flash3/README.md.",
+    "Duration: about 7.4 h in total (performance 22615 s, tools 4142 s)."
+  ],
+  "phases": {
+    "performance": {
+      "status": "partial",
+      "started_at": "2026-10-31T02:34:01+00:00",
+      "error": "BenchmarkFailed: Benchmark incomplete; schedule did not complete; cells: d259840c4:fail",
+      "duration_s": 22614.6,
+      "ended_at": "2026-10-31T08:50:56+00:00"
+    },
+    "tools": {
+      "status": "incomplete",
+      "started_at": "2026-10-31T08:50:56+00:00",
+      "error": "BenchmarkFailed: Benchmark incomplete; schedule did not complete",
+      "duration_s": 4141.5,
+      "ended_at": "2026-10-31T09:59:57+00:00"
+    }
+  },
+  "container_image": null,
+  "sparkrun_version": "0.4.1",
+  "harness_commit": "291f18a9b507218342077c38169c1d68de70466c-dirty",
+  "server_reuse": {
+    "launches": 0,
+    "skip_run_calls": 1,
+    "skip_run_ok": 0
+  },
+  "resources": {
+    "config": {
+      "runtime": "vllm-distributed",
+      "container": "tensorfold:v0.6.6-cb2ebf0540f4-pb7c96ae7e07e",
+      "tensor_parallel": 1
+    },
+    "server": {
+      "preemptions": 0,
+      "retractions": 0
+    },
+    "memory": {
+      "mem_total_gib": 121.7,
+      "samples": 2389,
+      "baseline_used_gib": 3.8,
+      "loaded_used_gib": 76.7,
+      "model_footprint_gib": 72.9,
+      "peak_used_gib": 115.6,
+      "min_available_gib": 6.1,
+      "phases": {
+        "baseline": {
+          "peak_used_gib": 3.8,
+          "min_available_gib": 117.9,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 12.61,
+          "temp_max_c": 48.0,
+          "samples": 3
+        },
+        "preflight": {
+          "peak_used_gib": 3.8,
+          "min_available_gib": 117.9,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 5.06,
+          "temp_max_c": 47.0,
+          "samples": 1
+        },
+        "performance": {
+          "peak_used_gib": 115.6,
+          "min_available_gib": 6.1,
+          "container_peak_gib": 43.4,
+          "gpu_util_mean_pct": 73.5,
+          "power_max_w": 67.55,
+          "temp_max_c": 83.0,
+          "samples": 2190
+        },
+        "tools": {
+          "peak_used_gib": 115.5,
+          "min_available_gib": 6.2,
+          "container_peak_gib": 11.0,
+          "gpu_util_mean_pct": 69.1,
+          "power_max_w": 65.83,
+          "temp_max_c": 73.0,
+          "samples": 194
+        },
+        "after-stop": {
+          "peak_used_gib": 3.8,
+          "min_available_gib": 117.9,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 4.65,
+          "temp_max_c": 44.0,
+          "samples": 1
+        }
+      }
+    }
+  },
+  "perf_grid": [
+    {
+      "depth": 65536,
+      "concurrency": 1,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 39925.24012895031,
+      "pp_req_tok_s": 39925.24012895031,
+      "tg_tok_s": 51.88571744850958,
+      "tg_req_tok_s": 51.88571744850958,
+      "ttfr_ms": 95.88578067875157,
+      "e2e_ttft_ms": 2794.6305486839265
+    },
+    {
+      "depth": 65536,
+      "concurrency": 2,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 544.2113922437181,
+      "pp_req_tok_s": 27123.424680321677,
+      "tg_tok_s": 62.534220503453575,
+      "tg_req_tok_s": 34.971772565807726,
+      "ttfr_ms": 142.04089818910384,
+      "e2e_ttft_ms": 8374.12851686046
+    },
+    {
+      "depth": 65536,
+      "concurrency": 4,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 802.3992089219624,
+      "pp_req_tok_s": 8726.059568378081,
+      "tg_tok_s": 52.16385184167018,
+      "tg_req_tok_s": 21.645749356361524,
+      "ttfr_ms": 348.45707364729606,
+      "e2e_ttft_ms": 8463.127753561517
+    },
+    {
+      "depth": 259840,
+      "concurrency": 1,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 5861.248513027001,
+      "pp_req_tok_s": 5861.248513027001,
+      "tg_tok_s": 46.77748865996767,
+      "tg_req_tok_s": 46.77748865996767,
+      "ttfr_ms": 393.5004766875257,
+      "e2e_ttft_ms": 4348.407104068126
+    },
+    {
+      "depth": 259840,
+      "concurrency": 2,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 296.33801002695765,
+      "pp_req_tok_s": 2695.5224223389396,
+      "tg_tok_s": 41.51553131017946,
+      "tg_req_tok_s": 22.415956231725005,
+      "ttfr_ms": 804.8526241909713,
+      "e2e_ttft_ms": 14025.790756975766
+    },
+    {
+      "depth": 259840,
+      "concurrency": 4,
+      "status": "incomplete",
+      "ok": false,
+      "ctx_only": false
+    }
+  ],
+  "perf_overview": {
+    "columns": [
+      "c1",
+      "c2",
+      "c4"
+    ],
+    "rows": [
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "51.9",
+          "c2": "62.5",
+          "c4": "52.2"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "46.8",
+          "c2": "41.5",
+          "c4": "n/a"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "51.9",
+          "c2": "35.0",
+          "c4": "21.6"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "46.8",
+          "c2": "22.4",
+          "c4": "n/a"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "39925",
+          "c2": "544",
+          "c4": "802"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "5861",
+          "c2": "296",
+          "c4": "n/a"
+        }
+      }
+    ]
+  },
+  "tools": {
+    "final_score": null,
+    "rating": null,
+    "deployability": null,
+    "responsiveness": null,
+    "points": null,
+    "max_points": null,
+    "scenarios": 0,
+    "version": null,
+    "pass": 0,
+    "partial": 0,
+    "fail": 0,
+    "trials": null,
+    "trial_statistics": null
+  }
+}
