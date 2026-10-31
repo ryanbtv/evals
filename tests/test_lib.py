@@ -233,6 +233,17 @@ class TestResources(unittest.TestCase):
                                                     "--mem-fraction-static": 0.5, "--chunked-prefill-size": "8192"})
 
     def test_render_and_leaderboard_missing(self):
+        lim = {"run_id": "r2", "model": "m", "tools": {"final_score": None}, "limitations": ["cell did not complete"],
+               "perf_grid": [{"depth": 1, "concurrency": 4, "status": "incomplete", "ok": False}]}
+        self.assertEqual(lib.cell_text(lim["perf_grid"][0], "tg_tok_s", 1), "n/a")
+        md = lib.render_summary(lim)
+        self.assertIn("## Limitations", md)
+        self.assertIn("- cell did not complete", md)
+        self.assertIn("Score: n/a", md)
+        row = lib.leaderboard([lim]).splitlines()[-1]
+        self.assertIn("summary.md) ‡ |", row)
+        self.assertIn("| n/a |", row)
+        self.assertNotIn("None", row)
         old = {"run_id": "r1", "model": "m", "perf_grid": []}
         self.assertNotIn("## Resources", lib.render_summary(old))
         row = lib.leaderboard([old]).splitlines()[-1]

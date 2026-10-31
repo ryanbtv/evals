@@ -130,7 +130,9 @@ def perf_grid(results: dict | None, depths: list[int], concs: list[int], errors:
 
 
 def cell_text(cell: dict | None, field: str, nd: int) -> str:
-    """FAIL; value; value† (context-load row only); value* (some requests failed)."""
+    """FAIL; n/a (cell never completed); value; value† (context-load row only); value* (some requests failed)."""
+    if cell and cell.get("status") == "incomplete":
+        return "n/a"
     if not cell or cell.get("status", "ok" if cell.get("ok") else "fail") == "fail":
         return "FAIL"
     v = cell.get(field)
@@ -257,7 +259,9 @@ def render_summary(s: dict) -> str:
                 L.append(f"| {c['depth']} | {c['concurrency']} | {e['count']} | {ex} |")
             L.append("")
     t = s.get("tools")
-    if t:
+    if t and t.get("final_score") is None:
+        L += ["## Tool calling (tool-eval-bench)", "", "Score: n/a (no completed trial; see Limitations).", ""]
+    elif t:
         L += ["## Tool calling (tool-eval-bench)", "", "| Score | Rating | Deployability | Responsiveness | Points | Scenarios | Pass | Partial | Fail | Trials |",
               "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|",
               f"| {t.get('final_score')} | {t.get('rating')} | {t.get('deployability')} | {t.get('responsiveness')} | {t.get('points')}/{t.get('max_points')} | {t.get('scenarios')} | {t.get('pass')} | {t.get('partial')} | {t.get('fail')} | {t.get('trials') or 1} |", "",
@@ -268,13 +272,17 @@ def render_summary(s: dict) -> str:
                   f"(median {ts.get('final_score_median')}, 95% CI {ts.get('final_score_ci95')}); points mean {ts.get('total_points_mean')} "
                   f"± {ts.get('total_points_stddev')}; pass@k {ts.get('pass_at_k')}%, pass^k {ts.get('pass_hat_k')}%, "
                   f"reliability gap {ts.get('reliability_gap')}.", ""]
+    if s.get("limitations"):
+        L += ["## Limitations", "", "The run is valid for the results it reports; these limits apply.", ""]
+        L += [f"- {x}" for x in s["limitations"]] + [""]
     return "\n".join(L)
 
 
 def leaderboard(summaries: list[dict]) -> str:
     L = ["# Leaderboard", "", "Generated from `runs/*/summary.json`. See each run's `summary.md` for full grids.", "",
          "Decode tok/s per request (tg/req) and prefill tok/s (pp) at each run's short (smallest) and long (largest) depth.",
-         "† context-load row only (measured requests failed); \\* some requests failed.",
+         "† context-load row only (measured requests failed); \\* some requests failed; "
+         "n/a = not measured (cell or tool eval did not complete); ‡ run has documented limitations (see its summary.md).",
          "Memory columns are unified-memory GiB: footprint = used after load minus baseline; min available = the run's tightest headroom; — = not recorded.", "",
          "| Run | Model | Short depth | tg/req c1 | tg/req c4 | pp c1 | Long depth | tg/req c1 | tg/req c4 | pp c1 | Tools score | Model footprint GiB | Peak used GiB | Min available GiB |",
          "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
@@ -290,9 +298,12 @@ def leaderboard(summaries: list[dict]) -> str:
         mem = (s.get("resources") or {}).get("memory") or {}
         depths = sorted({x["depth"] for x in s.get("perf_grid") or []}) or [None]
         lo, hi = depths[0], depths[-1]
-        L.append(f"| [{rid}](runs/{rid}/summary.md) | {s.get('model')} | {lo} | {cell(s,lo,1,'tg_req_tok_s')} | {cell(s,lo,4,'tg_req_tok_s')} | "
+        mark = " ‡" if s.get("limitations") else ""
+        tools = s.get("tools")
+        score = "—" if not tools else ("n/a" if tools.get("final_score") is None else tools["final_score"])
+        L.append(f"| [{rid}](runs/{rid}/summary.md){mark} | {s.get('model')} | {lo} | {cell(s,lo,1,'tg_req_tok_s')} | {cell(s,lo,4,'tg_req_tok_s')} | "
                  f"{cell(s,lo,1,'pp_tok_s')} | {hi} | {cell(s,hi,1,'tg_req_tok_s')} | {cell(s,hi,4,'tg_req_tok_s')} | "
-                 f"{cell(s,hi,1,'pp_tok_s')} | {(s.get('tools') or {}).get('final_score', '—')} | "
+                 f"{cell(s,hi,1,'pp_tok_s')} | {score} | "
                  f"{_f(mem.get('model_footprint_gib'))} | {_f(mem.get('peak_used_gib'))} | {_f(mem.get('min_available_gib'))} |")
     return "\n".join(L) + "\n"
 

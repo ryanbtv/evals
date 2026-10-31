@@ -1,0 +1,41 @@
+recipe_version: "2"
+description: >-
+  TensorFold 0.6.6 flash-3 (github.com/anubhavgupta/Tensorfold-recipies-single-dgx-spark/flash-3):
+  turboderp/Qwen3.8-Flash-Next-exl3 4.05bpw_h6_ng6 + incoai/Qwen3.8-Flash-Next-DFlash2 drafter, patches 0001-0006.
+  Image built by ~/tensorfold-recipes/tensorfold.sh --tf-version 0.6.6 --tf-patches flash-3/runtime/patches.
+model: turboderp/Qwen3.8-Flash-Next-exl3
+model_revision: 4.05bpw_h6_ng6
+container: tensorfold:v0.6.6-cb2ebf0540f4-pb7c96ae7e07e
+runtime: vllm-distributed
+min_sparkrun_version: "0.4.1"
+max_nodes: 1
+defaults:
+  port: 8888
+  host: 0.0.0.0
+  tensor_parallel: 1
+  served_model_name: Qwen3.8-Flash-Next
+  parallel: 9
+  context: 262144
+  kv_dtype: int8
+  max_tokens: 32768
+env:
+  HF_HUB_OFFLINE: '1'
+  TENSORFOLD_NGRAM_LOCK_GIB: '0'
+  TENSORFOLD_MAX_BODY_MIB: '192'
+  TENSORFOLD_VIDEO_TOKENS: '16384'
+  TENSORFOLD_NO_UPDATE_CHECK: '1'
+  TENSORFOLD_MEMORY_RESERVE_GIB: '2'
+  TENSORFOLD_VISION_WORKSPACE_MIB: '0'
+  TENSORFOLD_KEEP_MAX: '128'
+  TENSORFOLD_VISION_WEIGHTS: /cache/huggingface/vision-f16-4.05.safetensors
+executor_config:
+  entrypoint: ""
+  ulimit:
+    - stack=67108864
+  volumes:
+    - ~/tensorfold-recipes/flash-3/tools/tool_trace.py:/usr/local/lib/python3.12/dist-packages/tensorfold/cuda/tool_trace.py:ro
+    - ~/tensorfold-recipes/flash-3/tools/tool_calls.py:/usr/local/lib/python3.12/dist-packages/tensorfold/cuda/tool_calls.py:ro
+# tensorfold has no --served-model-name; sparkrun's vllm runtime appends one unless present, so it is
+# passed as an ignored positional to bash -c. {model} ($1) is the sparkrun-validated snapshot path. The model id comes from --name.
+command: |
+  bash -c 'exec tensorfold serve "$1" --name {served_model_name} --host {host} --port {port} --parallel {parallel} --context {context} --kv-dtype {kv_dtype} --temperature 1.0 --top-p 0.95 --top-k 20 --max-tokens {max_tokens} --vision --vision-max-images 50 --vision-image-tokens 16384 --thinking --drafter /cache/huggingface/hub/models--incoai--Qwen3.8-Flash-Next-DFlash2/snapshots/a22a1744e85c17364dcc54a6a420af7135d4c7f6 --mtp-drafts 7 --mtp-confidence 0.5' tensorfold {model} --served-model-name {served_model_name}
