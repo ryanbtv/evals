@@ -1,0 +1,373 @@
+{
+  "run_id": "20261031T100855Z--qwen38-flash-next-int4-fast-upstream",
+  "model": "azampatti/Qwen3.8-Flash-Next-125B-A5B-INT4-AutoRound",
+  "served_model_name": "Qwen3.8-Flash-Next-125B-A5B-INT4-fast-upstream",
+  "recipe_name": "qwen38-flash-next-int4-fast-upstream.yml",
+  "smoke": false,
+  "dry_run": false,
+  "phases": {
+    "performance": {
+      "status": "ok",
+      "started_at": "2026-10-31T10:09:00+00:00",
+      "error": null,
+      "duration_s": 5223.6,
+      "ended_at": "2026-10-31T11:36:04+00:00"
+    },
+    "tools": {
+      "status": "ok",
+      "started_at": "2026-10-31T11:36:04+00:00",
+      "error": null,
+      "duration_s": 3618.3,
+      "ended_at": "2026-10-31T12:36:22+00:00"
+    }
+  },
+  "container_image": "eugr/spark-vllm-b12x@sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595",
+  "sparkrun_version": "0.4.1",
+  "harness_commit": "291f18a9b507218342077c38169c1d68de70466c-dirty",
+  "server_reuse": {
+    "launches": 1,
+    "skip_run_calls": 1,
+    "skip_run_ok": 1
+  },
+  "resources": {
+    "config": {
+      "runtime": "vllm-distributed",
+      "container": "eugr/spark-vllm-b12x@sha256:03a956544e9f9b4b7ba91690469fbe7848bdbef29a7d2e0f5788368467bb3595",
+      "gpu_memory_utilization": 0.01,
+      "kv_cache_bytes": "20g",
+      "kv_cache_dtype": "auto",
+      "max_model_len": 262144,
+      "max_num_seqs": 8,
+      "max_num_batched_tokens": 8192,
+      "tensor_parallel": 1,
+      "num_speculative_tokens": 5,
+      "--gpu-memory-utilization": 0.01,
+      "--kv-cache-memory-bytes": "20g",
+      "--max-num-seqs": 8,
+      "--max-model-len": 262144
+    },
+    "server": {
+      "kv_tokens": 646666,
+      "kv_max_concurrency": {
+        "tokens_per_request": 262144,
+        "x": 2.47
+      },
+      "weights_gib": 73.28,
+      "kv_cache_gib": 18.63,
+      "kv_usage_peak_pct": 80.9,
+      "preemptions": 0,
+      "retractions": 0,
+      "max_waiting_requests": 3
+    },
+    "memory": {
+      "mem_total_gib": 121.7,
+      "samples": 881,
+      "baseline_used_gib": 4.6,
+      "loaded_used_gib": 110.2,
+      "model_footprint_gib": 105.7,
+      "peak_used_gib": 110.6,
+      "min_available_gib": 11.1,
+      "phases": {
+        "baseline": {
+          "peak_used_gib": 4.8,
+          "min_available_gib": 116.9,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 4.73,
+          "temp_max_c": 44.0,
+          "samples": 3
+        },
+        "preflight": {
+          "peak_used_gib": 4.6,
+          "min_available_gib": 117.1,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 4.58,
+          "temp_max_c": 44.0,
+          "samples": 1
+        },
+        "performance": {
+          "peak_used_gib": 110.6,
+          "min_available_gib": 11.1,
+          "container_peak_gib": 18.7,
+          "gpu_util_mean_pct": 80.8,
+          "power_max_w": 85.82,
+          "temp_max_c": 83.0,
+          "samples": 517
+        },
+        "tools": {
+          "peak_used_gib": 110.6,
+          "min_available_gib": 11.1,
+          "container_peak_gib": 9.5,
+          "gpu_util_mean_pct": 93.5,
+          "power_max_w": 65.18,
+          "temp_max_c": 79.0,
+          "samples": 359
+        },
+        "after-stop": {
+          "peak_used_gib": 4.1,
+          "min_available_gib": 117.6,
+          "container_peak_gib": null,
+          "gpu_util_mean_pct": 0.0,
+          "power_max_w": 16.4,
+          "temp_max_c": 67.0,
+          "samples": 1
+        }
+      }
+    }
+  },
+  "perf_grid": [
+    {
+      "depth": 65536,
+      "concurrency": 1,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 914.6400206742152,
+      "pp_req_tok_s": 914.6400206742152,
+      "tg_tok_s": 53.44440125847319,
+      "tg_req_tok_s": 53.44440125847319,
+      "ttfr_ms": 2242.150001344271,
+      "e2e_ttft_ms": 2247.774427989498
+    },
+    {
+      "depth": 65536,
+      "concurrency": 2,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 1010.0991004162253,
+      "pp_req_tok_s": 515.0710046453822,
+      "tg_tok_s": 81.9943846634224,
+      "tg_req_tok_s": 44.36408316852532,
+      "ttfr_ms": 3979.8180123519464,
+      "e2e_ttft_ms": 3984.803003181393
+    },
+    {
+      "depth": 65536,
+      "concurrency": 4,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 1084.801313554243,
+      "pp_req_tok_s": 275.1383456861245,
+      "tg_tok_s": 107.06659454795584,
+      "tg_req_tok_s": 31.534581071617477,
+      "ttfr_ms": 7448.934846421859,
+      "e2e_ttft_ms": 7450.920052515964
+    },
+    {
+      "depth": 259840,
+      "concurrency": 1,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 634.5975024430254,
+      "pp_req_tok_s": 634.5975024430254,
+      "tg_tok_s": 60.032478772501044,
+      "tg_req_tok_s": 60.032478772501044,
+      "ttfr_ms": 3230.625535012223,
+      "e2e_ttft_ms": 3250.468633021228
+    },
+    {
+      "depth": 259840,
+      "concurrency": 2,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 751.6811205863938,
+      "pp_req_tok_s": 383.53820734081893,
+      "tg_tok_s": 79.23393102635116,
+      "tg_req_tok_s": 43.21924607049206,
+      "ttfr_ms": 5343.689226972249,
+      "e2e_ttft_ms": 5362.620660821752
+    },
+    {
+      "depth": 259840,
+      "concurrency": 4,
+      "status": "ok",
+      "ok": true,
+      "ctx_only": false,
+      "pp_tok_s": 21.324231795251418,
+      "pp_req_tok_s": 38.365293591452314,
+      "tg_tok_s": 1.4909961846214521,
+      "tg_req_tok_s": 17.293722525664148,
+      "ttfr_ms": 207018.25916516827,
+      "e2e_ttft_ms": 207036.31029376024
+    }
+  ],
+  "perf_overview": {
+    "columns": [
+      "c1",
+      "c2",
+      "c4"
+    ],
+    "rows": [
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "53.4",
+          "c2": "82.0",
+          "c4": "107.1"
+        }
+      },
+      {
+        "metric": "Aggregate decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "60.0",
+          "c2": "79.2",
+          "c4": "1.5"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "53.4",
+          "c2": "44.4",
+          "c4": "31.5"
+        }
+      },
+      {
+        "metric": "Per-request decode tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "60.0",
+          "c2": "43.2",
+          "c4": "17.3"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 65536,
+        "values": {
+          "c1": "915",
+          "c2": "1010",
+          "c4": "1085"
+        }
+      },
+      {
+        "metric": "Prefill tok/s",
+        "depth": 259840,
+        "values": {
+          "c1": "635",
+          "c2": "752",
+          "c4": "21"
+        }
+      }
+    ]
+  },
+  "tools": {
+    "final_score": 90,
+    "rating": "\u2605\u2605\u2605\u2605\u2605 Excellent",
+    "deployability": 78,
+    "responsiveness": 50,
+    "points": 174,
+    "max_points": 194,
+    "scenarios": 97,
+    "version": "2.8.0",
+    "pass": 82,
+    "partial": 10,
+    "fail": 5,
+    "trials": 3,
+    "trial_statistics": {
+      "trials": 3,
+      "final_score_mean": 90.3,
+      "final_score_stddev": 0.6,
+      "final_score_median": 90.0,
+      "final_score_ci95": [
+        90.0,
+        91.0
+      ],
+      "total_points_mean": 175,
+      "total_points_stddev": 1.0,
+      "pass_at_k": 89.7,
+      "pass_hat_k": 79.4,
+      "reliability_gap": 10.3,
+      "per_category": {
+        "A": {
+          "label": "Tool Selection",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "B": {
+          "label": "Parameter Precision",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "C": {
+          "label": "Multi-Step Chains",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "D": {
+          "label": "Restraint & Refusal",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "E": {
+          "label": "Error Recovery",
+          "mean_percent": 83,
+          "stddev_percent": 0.0
+        },
+        "F": {
+          "label": "Localization",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "G": {
+          "label": "Structured Reasoning",
+          "mean_percent": 83,
+          "stddev_percent": 0.0
+        },
+        "H": {
+          "label": "Instruction Following",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "I": {
+          "label": "Context & State",
+          "mean_percent": 95,
+          "stddev_percent": 5.0
+        },
+        "J": {
+          "label": "Code Patterns",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "K": {
+          "label": "Safety & Boundaries",
+          "mean_percent": 92,
+          "stddev_percent": 0.0
+        },
+        "L": {
+          "label": "Toolset Scale",
+          "mean_percent": 92,
+          "stddev_percent": 6.9
+        },
+        "M": {
+          "label": "Autonomous Planning",
+          "mean_percent": 89,
+          "stddev_percent": 19.1
+        },
+        "N": {
+          "label": "Creative Composition",
+          "mean_percent": 100,
+          "stddev_percent": 0.0
+        },
+        "O": {
+          "label": "Structured Output",
+          "mean_percent": 83,
+          "stddev_percent": 0.0
+        },
+        "P": {
+          "label": "Hard Mode",
+          "mean_percent": 80.7,
+          "stddev_percent": 1.2
+        }
+      }
+    }
+  }
+}
