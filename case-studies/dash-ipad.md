@@ -66,7 +66,22 @@ At release, Sol built an unsigned archive, reported the missing profile, and lef
 
 **A green test is only as strong as its inputs.** Qwen's missing default, Sol's working forecast for the wrong city, and MAI's isolated snapshot all pass plausible automated checks. Opus offers the most reviewable visual record, but even its strongest seeded-calendar test can't identify the right calendar on a new account. Prefer a cold launch without injected defaults, a real calendar edit, a denied-permission run and a cache-empty offline run over another raw test-count comparison.
 
-**This was not a controlled speed or cost benchmark.** The runs shared a Mac, simulator tooling, a bundle identifier and changing Apple signing resources. The user corrected WeatherKit enablement and the development certificate during phase 4. Signing state, prompt continuations and follow-up opportunities differed; only Qwen got the physical-device bug report. No normalized time, token or cost measurements are available here. Don't read greater elapsed time, fewer tests, or an unobserved device bug as a model ranking.
+**This was not a controlled speed or cost benchmark.** The runs shared a Mac, simulator tooling, a bundle identifier and changing Apple signing resources. The user corrected WeatherKit enablement and the development certificate during phase 4. Signing state, prompt continuations and follow-up opportunities differed; only Qwen got the physical-device bug report.
+
+## Token usage: compare the working app before distribution
+
+**Phases 0–6 are the fairest comparison:** all four built through wall behavior. Sol recorded the least token traffic (14.94M); Qwen the most (52.87M, or 3.54× Sol). Sol also used the fewest output and reasoning tokens. That is an efficiency result for this task, not a verdict on quality: Opus used more tokens but produced the strongest visual verification record.
+
+| Run | Input outside cache counters | Cache read | Cache write | Output | Reasoning | Phases 0–6 total | All sessions, including phase 7 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Qwen | 52,206,164 | 0 | 0 | 235,587 | 427,225 | **52,868,976** | 64,262,467 |
+| Opus | 580 | 27,650,195 | 1,097,901 | 194,998 | 137,352 | **29,081,026** | 31,967,144 |
+| MAI | 1,992,247 | 31,871,360 | 0 | 107,522 | 64,911 | **34,036,040** | 39,222,865 |
+| Sol | 777 | 13,997,195 | 841,309 | 86,437 | 18,431 | **14,944,149** | 15,990,386 |
+
+Source: OpenCode's local session API, keyed by Dash worktree. The five component columns are **phases 0–6 only**. Totals sum the five recorded counters across all model calls, including repeated context and delegated work. The all-session column covers 31 top-level sessions and 10 child sessions; the phase-limited column excludes each TestFlight session and its children. The counters do not measure unique prompt text, equivalent compute or dollars. In particular, Qwen's local provider reported no cache traffic separately; that does not prove caching was disabled. Most Copilot traffic was reported as cache reads.
+
+**Later Qwen follow-up:** the all-session total includes physical-device debugging *after* the evaluated upload. In `8dc5040`, Qwen supplied a default forecast location and implemented a revised user-requested calendar rule. The session subsequently reported real weather and timed events on the iPad. That updates the hardware diagnosis above; it neither changes the original `1dd3d7a` binary nor establishes a four-way device comparison.
 
 ## The device pass that could change the recommendation
 
