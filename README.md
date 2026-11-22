@@ -4,6 +4,10 @@ A reproducible benchmark harness for local LLM inference on an NVIDIA DGX Spark,
 built on [sparkrun](https://github.com/spark-arena/sparkrun)'s Python benchmark API.
 Every model runs the same fixed schedule, so results compare directly.
 
+## Application case studies
+
+- [Four models build the same iPad wall dashboard](case-studies/dash-ipad.md) — a review of the apps, simulator results and signed releases. This is separate from the fixed-schedule inference leaderboard.
+
 ## Layout
 
 ```
